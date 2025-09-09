@@ -931,6 +931,30 @@ async def download_document_content(request: dict):
         logger.error(f"Document download error: {e}")
         raise HTTPException(status_code=500, detail="Download failed")
 
+@api_router.get("/files/download/{file_id}")
+async def download_shared_file(file_id: str, user_id: str = "demo-user"):
+    """Download a shared file"""
+    shared_file_data = await db.shared_files.find_one({"id": file_id})
+    if not shared_file_data:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    shared_file = SharedFile(**shared_file_data)
+    
+    # Check permissions
+    if user_id not in shared_file.shared_with and shared_file.shared_by != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if not Path(shared_file.file_path).exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    await log_audit_event(user_id, "DOWNLOAD", "FILE", {"file_id": file_id, "filename": shared_file.original_name})
+    
+    return FileResponse(
+        path=shared_file.file_path,
+        filename=shared_file.original_name,
+        media_type='application/octet-stream'
+    )
+
 @api_router.get("/notifications")
 async def get_notifications(user_id: str = "demo-user", limit: int = 50):
     """Get notifications for user"""
