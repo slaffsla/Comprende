@@ -422,6 +422,11 @@ function App() {
         setSourceText(prev => prev + finalTranscript);
         setIsListening(false);
         toast.success("Voice input captured successfully");
+        
+        // Auto-translate if enabled
+        if (settings.autoTranslateVoice) {
+          setTimeout(() => handleTranslate(), 500);
+        }
       }
     };
 
