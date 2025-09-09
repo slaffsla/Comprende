@@ -674,7 +674,7 @@ async def translate_text(request: TranslationRequest, user_id: Optional[str] = N
     # Auto-detect source language if not provided
     source_lang = request.source_language
     if not source_lang:
-        source_lang = translation_service.detect_language(request.text)
+        source_lang = await translation_service.detect_language(request.text)
     
     # Perform translation
     translated_text, confidence = await translation_service.translate_text(
