@@ -237,6 +237,130 @@ class ComprehendeAPITester:
             except:
                 pass
 
+    def test_hebrew_document_processing(self):
+        """Test Hebrew document processing and language detection"""
+        # Create a temporary text file with Hebrew content
+        hebrew_text = "שלום עולם! זהו מסמך בעברית לבדיקת זיהוי שפה ותרגום."
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write(hebrew_text)
+            temp_file_path = f.name
+        
+        try:
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('hebrew_document.txt', f, 'text/plain')}
+                data = {
+                    'languages': 'heb',
+                    'translate_to': 'eng'
+                }
+                
+                success, response = self.run_test(
+                    "Hebrew Document Processing",
+                    "POST",
+                    "documents/process",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success:
+                    detected_lang = response.get('detected_language', '')
+                    print(f"   Detected language: {detected_lang}")
+                    print(f"   Expected: heb, Got: {detected_lang}")
+                    
+                    # Check if Hebrew was correctly detected
+                    if detected_lang == 'heb':
+                        print("   ✅ Hebrew language detection PASSED")
+                    else:
+                        print("   ❌ Hebrew language detection FAILED - detected as English instead")
+                        self.failed_tests.append({
+                            'name': 'Hebrew Language Detection',
+                            'expected': 'heb',
+                            'actual': detected_lang,
+                            'response': 'Hebrew text incorrectly detected as English'
+                        })
+                    
+                    print(f"   Extracted text: {response.get('extracted_text', '')[:100]}...")
+                    if response.get('translated_text'):
+                        print(f"   Translated text: {response.get('translated_text', '')[:100]}...")
+                
+                return success
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
+
+    def test_arabic_document_processing(self):
+        """Test Arabic document processing and language detection"""
+        # Create a temporary text file with Arabic content
+        arabic_text = "أهلاً وسهلاً! هذا مستند باللغة العربية لاختبار التعرف على اللغة والترجمة."
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write(arabic_text)
+            temp_file_path = f.name
+        
+        try:
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('arabic_document.txt', f, 'text/plain')}
+                data = {
+                    'languages': 'ara',
+                    'translate_to': 'eng'
+                }
+                
+                success, response = self.run_test(
+                    "Arabic Document Processing",
+                    "POST",
+                    "documents/process",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success:
+                    detected_lang = response.get('detected_language', '')
+                    print(f"   Detected language: {detected_lang}")
+                    print(f"   Expected: ara, Got: {detected_lang}")
+                    
+                    # Check if Arabic was correctly detected
+                    if detected_lang == 'ara':
+                        print("   ✅ Arabic language detection PASSED")
+                    else:
+                        print("   ❌ Arabic language detection FAILED")
+                    
+                    print(f"   Extracted text: {response.get('extracted_text', '')[:100]}...")
+                    if response.get('translated_text'):
+                        print(f"   Translated text: {response.get('translated_text', '')[:100]}...")
+                
+                return success
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
+
+    def test_document_download(self):
+        """Test document download functionality"""
+        download_data = {
+            "content": "This is sample content for download testing. The file download functionality should work properly.",
+            "filename": "test_download.txt"
+        }
+        
+        success, response = self.run_test(
+            "Document Download",
+            "POST",
+            "documents/download",
+            200,
+            data=download_data
+        )
+        
+        if success:
+            print("   ✅ Document download endpoint working")
+        else:
+            print("   ❌ Document download endpoint failed")
+        
+        return success
+
     def test_translation_history(self):
         """Test translation history endpoint"""
         success, response = self.run_test(
