@@ -550,9 +550,18 @@ function App() {
     return langMap[langCode] || 'en-US';
   };
 
-  const downloadFile = (content, filename, type = 'text/plain') => {
+  const downloadFile = async (content, filename, type = 'text/plain') => {
     try {
-      const blob = new Blob([content], { type });
+      // Use backend download endpoint for better reliability
+      const response = await axios.post(`${BACKEND_URL}/api/documents/download`, {
+        content: content,
+        filename: filename
+      }, {
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const blob = new Blob([response.data], { type });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -564,7 +573,22 @@ function App() {
       toast.success("File downloaded successfully");
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error("Download failed");
+      // Fallback to client-side download
+      try {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success("File downloaded successfully");
+      } catch (fallbackError) {
+        console.error('Fallback download failed:', fallbackError);
+        toast.error("Download failed");
+      }
     }
   };
 
