@@ -127,6 +127,13 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
+  // Settings state
+  const [settings, setSettings] = useState({
+    voiceInputEnabled: true,
+    voiceOutputEnabled: true,
+    autoTranslateVoice: false
+  });
+  
   // Voice recognition refs
   const recognitionRef = useRef(null);
   const speechSynthRef = useRef(null);
