@@ -88,21 +88,49 @@ function App() {
     }
 
     setIsLoading(true);
+    setTranslatedText(""); // Clear previous result
+    
     try {
-      const response = await axios.post(`${API}/translate`, {
+      console.log("Starting translation request...");
+      const requestBody = {
         text: sourceText,
         source_language: sourceLang === "auto" ? null : sourceLang,
         target_language: targetLang,
         context: context,
         industry: industry
+      };
+      
+      console.log("Request body:", requestBody);
+      console.log("API URL:", `${API}/translate`);
+      
+      const response = await axios.post(`${API}/translate`, requestBody, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000 // 30 second timeout
       });
 
-      setTranslatedText(response.data.translated_text);
-      toast.success(`Translation completed with ${(response.data.confidence * 100).toFixed(1)}% confidence`);
-      loadTranslationHistory(); // Refresh history
+      console.log("Translation response:", response.data);
+      
+      if (response.data && response.data.translated_text) {
+        setTranslatedText(response.data.translated_text);
+        toast.success(`Translation completed with ${(response.data.confidence * 100).toFixed(1)}% confidence`);
+        loadTranslationHistory(); // Refresh history
+      } else {
+        toast.error("Invalid response from translation service");
+      }
     } catch (error) {
       console.error("Translation failed:", error);
-      toast.error("Translation failed. Please try again.");
+      if (error.response) {
+        // Server responded with error status
+        toast.error(`Translation failed: ${error.response.data?.detail || error.response.statusText}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        toast.error("Translation failed: No response from server");
+      } else {
+        // Something else happened
+        toast.error(`Translation failed: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
