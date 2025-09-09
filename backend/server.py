@@ -274,63 +274,146 @@ class TranslationService:
             'uig': 'Uyghur'
         }
         
-    def detect_language(self, text: str) -> str:
-        """Enhanced language detection based on script and patterns"""
-        if not text:
+    async def detect_language(self, text: str) -> str:
+        """Enhanced language detection using LLM when patterns fail"""
+        if not text or len(text.strip()) < 3:
             return 'eng'
         
         text = text.strip()
         
-        # Hebrew detection
+        # First try pattern-based detection for speed
+        detected_lang = self._pattern_based_detection(text)
+        
+        # If pattern detection has low confidence, use LLM for better accuracy
+        if detected_lang == 'eng' and len(text) > 20:
+            try:
+                llm_detected = await self._llm_language_detection(text)
+                if llm_detected and llm_detected in self.language_codes:
+                    return llm_detected
+            except Exception as e:
+                logger.warning(f"LLM language detection failed: {e}")
+        
+        return detected_lang
+    
+    def _pattern_based_detection(self, text: str) -> str:
+        """Pattern-based language detection using character sets and common words"""
+        # Hebrew detection - enhanced patterns
         hebrew_chars = sum(1 for char in text if '\u0590' <= char <= '\u05FF')
-        if hebrew_chars > len(text) * 0.3:
+        if hebrew_chars > len(text) * 0.25:  # Lowered threshold for better detection
             return 'heb'
             
         # Arabic detection  
         arabic_chars = sum(1 for char in text if '\u0600' <= char <= '\u06FF')
-        if arabic_chars > len(text) * 0.3:
+        if arabic_chars > len(text) * 0.25:
             return 'ara'
             
         # Chinese detection
         chinese_chars = sum(1 for char in text if '\u4e00' <= char <= '\u9fff')
-        if chinese_chars > len(text) * 0.2:
+        if chinese_chars > len(text) * 0.15:
             return 'chi'
             
         # Japanese detection (Hiragana/Katakana)
         japanese_chars = sum(1 for char in text if '\u3040' <= char <= '\u30ff')
-        if japanese_chars > len(text) * 0.2:
+        if japanese_chars > len(text) * 0.15:
             return 'jpn'
             
         # Korean detection
         korean_chars = sum(1 for char in text if '\uac00' <= char <= '\ud7af')
-        if korean_chars > len(text) * 0.2:
+        if korean_chars > len(text) * 0.15:
             return 'kor'
             
         # Cyrillic script (Russian, etc.)
         cyrillic_chars = sum(1 for char in text if '\u0400' <= char <= '\u04ff')
-        if cyrillic_chars > len(text) * 0.3:
+        if cyrillic_chars > len(text) * 0.25:
             return 'rus'
             
         # Thai detection
         thai_chars = sum(1 for char in text if '\u0e00' <= char <= '\u0e7f')
-        if thai_chars > len(text) * 0.3:
+        if thai_chars > len(text) * 0.25:
             return 'tha'
+            
+        # Greek detection
+        greek_chars = sum(1 for char in text if '\u0370' <= char <= '\u03FF')
+        if greek_chars > len(text) * 0.25:
+            return 'ell'
             
         # Basic European language detection using common words
         text_lower = text.lower()
-        if any(word in text_lower for word in ['the', 'and', 'is', 'in', 'to', 'of', 'a']):
-            return 'eng'
-        elif any(word in text_lower for word in ['el', 'la', 'de', 'que', 'y', 'en', 'un']):
-            return 'spa'
-        elif any(word in text_lower for word in ['le', 'de', 'et', 'à', 'un', 'il', 'être']):
-            return 'fra'
-        elif any(word in text_lower for word in ['der', 'die', 'und', 'in', 'den', 'von', 'zu']):
-            return 'deu'
-        elif any(word in text_lower for word in ['il', 'di', 'che', 'e', 'la', 'un', 'per']):
-            return 'ita'
+        
+        # English detection
+        english_words = ['the', 'and', 'is', 'in', 'to', 'of', 'a', 'that', 'it', 'with', 'for', 'as', 'was', 'on', 'are']
+        english_count = sum(1 for word in english_words if word in text_lower)
+        
+        # Spanish detection
+        spanish_words = ['el', 'la', 'de', 'que', 'y', 'en', 'un', 'es', 'se', 'no', 'te', 'lo', 'le', 'da', 'su']
+        spanish_count = sum(1 for word in spanish_words if word in text_lower)
+        
+        # French detection
+        french_words = ['le', 'de', 'et', 'à', 'un', 'il', 'être', 'et', 'en', 'avoir', 'que', 'pour', 'dans', 'ce', 'son']
+        french_count = sum(1 for word in french_words if word in text_lower)
+        
+        # German detection
+        german_words = ['der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im']
+        german_count = sum(1 for word in german_words if word in text_lower)
+        
+        # Italian detection
+        italian_words = ['il', 'di', 'che', 'e', 'la', 'un', 'per', 'in', 'del', 'da', 'con', 'non', 'si', 'le', 'una']
+        italian_count = sum(1 for word in italian_words if word in text_lower)
+        
+        # Portuguese detection
+        portuguese_words = ['o', 'de', 'a', 'e', 'do', 'da', 'em', 'um', 'para', 'é', 'com', 'não', 'uma', 'os', 'no']
+        portuguese_count = sum(1 for word in portuguese_words if word in text_lower)
+        
+        # Find the language with highest word count
+        language_scores = {
+            'eng': english_count,
+            'spa': spanish_count,
+            'fra': french_count,
+            'deu': german_count,
+            'ita': italian_count,  
+            'por': portuguese_count
+        }
+        
+        # Return language with highest score if above threshold
+        max_lang = max(language_scores, key=language_scores.get)
+        if language_scores[max_lang] >= 2 or (language_scores[max_lang] >= 1 and len(text.split()) <= 10):
+            return max_lang
             
         # Default to English
         return 'eng'
+    
+    async def _llm_language_detection(self, text: str) -> str:
+        """Use LLM for accurate language detection"""
+        if not self.llm_key:
+            return None
+            
+        try:
+            # Create language detection prompt
+            system_message = """You are a language detection expert. Analyze the given text and identify its language. 
+            Respond with ONLY the 3-letter ISO language code from this list:
+            eng (English), spa (Spanish), fra (French), deu (German), ita (Italian), por (Portuguese), 
+            rus (Russian), heb (Hebrew), ara (Arabic), chi (Chinese), jpn (Japanese), kor (Korean),
+            hin (Hindi), tur (Turkish), pol (Polish), nld (Dutch), swe (Swedish), nor (Norwegian),
+            dan (Danish), fin (Finnish), hun (Hungarian), ces (Czech), ron (Romanian), ell (Greek),
+            tha (Thai), vie (Vietnamese), ind (Indonesian), bul (Bulgarian), hrv (Croatian), ukr (Ukrainian)
+            
+            If uncertain, respond with 'eng'. Be very accurate."""
+            
+            chat = LlmChat(
+                api_key=self.llm_key,
+                session_id=f"lang_detect_{uuid.uuid4()}",
+                system_message=system_message
+            ).with_model("openai", "gpt-4o")
+            
+            user_message = UserMessage(text=f"Detect language: {text[:500]}")  # Limit text length
+            response = await chat.send_message(user_message)
+            
+            detected = response.strip().lower()
+            return detected if detected in self.language_codes else 'eng'
+            
+        except Exception as e:
+            logger.error(f"LLM language detection error: {e}")
+            return None
     
     async def translate_text(self, text: str, source_lang: str, target_lang: str, context: str = "general", industry: str = "general") -> tuple[str, float]:
         """Translate text using Emergent LLM"""
