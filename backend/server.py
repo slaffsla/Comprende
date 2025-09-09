@@ -637,7 +637,18 @@ async def create_user(user_data: UserCreate):
     user = User(**user_data.dict())
     user.status = "online"
     user.last_seen = datetime.utcnow()
-    await db.users.insert_one(user.dict())
+    
+    user_dict = user.dict()
+    # Ensure all datetime objects are converted to strings for MongoDB
+    if 'created_at' in user_dict:
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+    if 'last_seen' in user_dict:
+        user_dict['last_seen'] = user_dict['last_seen'].isoformat()
+    
+    # Remove any potential ObjectId fields
+    user_dict.pop('_id', None)
+    
+    await db.users.insert_one(user_dict)
     await log_audit_event(user.id, "CREATE", "USER", {"username": user.username})
     return user
 
