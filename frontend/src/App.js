@@ -455,36 +455,136 @@ function App() {
     }
   };
 
+  // Voice input handling
   const toggleVoiceInput = () => {
-    if (!recognitionRef.current) {
-      toast.error("Voice recognition not supported in this browser");
+    if (!isListening) {
+      startVoiceRecognition();
+    } else {
+      stopVoiceRecognition();
+    }
+  };
+
+  const startVoiceRecognition = () => {
+    // Check for browser support
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.error("Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.");
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      // Set recognition language based on source language
-      const langMap = {
-        'heb': 'he-IL',
-        'ara': 'ar-SA',
-        'spa': 'es-ES',
-        'fra': 'fr-FR',
-        'deu': 'de-DE',
-        'ita': 'it-IT',
-        'por': 'pt-PT',
-        'rus': 'ru-RU',
-        'chi': 'zh-CN',
-        'jpn': 'ja-JP',
-        'kor': 'ko-KR'
-      };
-      
-      recognitionRef.current.lang = langMap[sourceLang] || 'en-US';
-      recognitionRef.current.start();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    
+    // Set language based on source language selection
+    const recognitionLang = getVoiceLanguageCode(sourceLang);
+    recognition.lang = recognitionLang;
+
+    recognition.onstart = () => {
       setIsListening(true);
-      toast.info("Listening... Speak now");
+      toast.success(`Listening in ${LANGUAGES[sourceLang] || 'English'}...`);
+    };
+
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update the text with final result
+      if (finalTranscript) {
+        setSourceText(prev => prev + finalTranscript);
+        setIsListening(false);
+        toast.success("Voice input captured successfully");
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      
+      let errorMessage = "Speech recognition error";
+      switch (event.error) {
+        case 'no-speech':
+          errorMessage = "No speech detected. Please try again.";
+          break;
+        case 'audio-capture':
+          errorMessage = "No microphone found. Please check your microphone.";
+          break;
+        case 'not-allowed':
+          errorMessage = "Microphone permission denied. Please allow microphone access.";
+          break;
+        case 'network':
+          errorMessage = "Network error. Please check your internet connection.";
+          break;
+        case 'language-not-supported':
+          errorMessage = `Language not supported for voice recognition. Falling back to English.`;
+          break;
+        default:
+          errorMessage = `Speech recognition error: ${event.error}`;
+      }
+      
+      toast.error(errorMessage);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+      toast.error("Failed to start voice recognition. Please try again.");
     }
+  };
+
+  const stopVoiceRecognition = () => {
+    setIsListening(false);
+  };
+
+  const getVoiceLanguageCode = (langCode) => {
+    const langMap = {
+      'eng': 'en-US',
+      'spa': 'es-ES', 
+      'fra': 'fr-FR',
+      'deu': 'de-DE',
+      'heb': 'he-IL',
+      'ara': 'ar-SA',
+      'ita': 'it-IT',
+      'por': 'pt-PT',
+      'rus': 'ru-RU',
+      'chi': 'zh-CN',
+      'jpn': 'ja-JP',
+      'kor': 'ko-KR',
+      'hin': 'hi-IN',
+      'tur': 'tr-TR',
+      'pol': 'pl-PL',
+      'nld': 'nl-NL',
+      'swe': 'sv-SE',
+      'nor': 'no-NO',
+      'dan': 'da-DK',
+      'fin': 'fi-FI',
+      'hun': 'hu-HU',
+      'ces': 'cs-CZ',
+      'ron': 'ro-RO',
+      'ell': 'el-GR',
+      'tha': 'th-TH',
+      'vie': 'vi-VN',
+      'ind': 'id-ID',
+      'auto': 'en-US'
+    };
+    return langMap[langCode] || 'en-US';
   };
 
   const downloadFile = (content, filename, type = 'text/plain') => {
