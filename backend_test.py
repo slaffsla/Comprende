@@ -411,20 +411,19 @@ class ComprehendeAPITester:
         
         return success
 
-    def test_large_text_translation(self):
-        """Test translation with large text"""
-        large_text = "This is a test sentence. " * 100  # 2500+ characters
+    def test_hebrew_language_detection(self):
+        """Test Hebrew language detection in translation"""
+        hebrew_text = "שלום עולם! איך אתה היום? זהו טקסט בעברית לבדיקת זיהוי השפה."
         
         translation_data = {
-            "text": large_text,
-            "source_language": "eng",
-            "target_language": "fra",
+            "text": hebrew_text,
+            "target_language": "eng",
             "context": "general",
             "industry": "general"
         }
         
         success, response = self.run_test(
-            "Large Text Translation",
+            "Hebrew Language Detection in Translation",
             "POST",
             "translate",
             200,
@@ -432,8 +431,58 @@ class ComprehendeAPITester:
         )
         
         if success:
-            print(f"   Large text processed successfully")
-            print(f"   Processing time: {response.get('processing_time', 0):.2f}s")
+            detected_lang = response.get('source_language', '')
+            print(f"   Hebrew text: {hebrew_text[:50]}...")
+            print(f"   Detected language: {detected_lang}")
+            print(f"   Expected: heb, Got: {detected_lang}")
+            
+            # Critical check: Hebrew should be detected as 'heb', not 'eng'
+            if detected_lang == 'heb':
+                print("   ✅ Hebrew language detection PASSED")
+            else:
+                print("   ❌ Hebrew language detection FAILED - detected as English instead")
+                self.failed_tests.append({
+                    'name': 'Hebrew Language Detection',
+                    'expected': 'heb',
+                    'actual': detected_lang,
+                    'response': 'Hebrew text incorrectly detected as English'
+                })
+            
+            print(f"   Translated: {response.get('translated_text', '')}")
+        
+        return success
+
+    def test_arabic_language_detection(self):
+        """Test Arabic language detection in translation"""
+        arabic_text = "أهلاً وسهلاً! كيف حالك اليوم؟ هذا نص باللغة العربية لاختبار التعرف على اللغة."
+        
+        translation_data = {
+            "text": arabic_text,
+            "target_language": "eng",
+            "context": "general",
+            "industry": "general"
+        }
+        
+        success, response = self.run_test(
+            "Arabic Language Detection in Translation",
+            "POST",
+            "translate",
+            200,
+            data=translation_data
+        )
+        
+        if success:
+            detected_lang = response.get('source_language', '')
+            print(f"   Arabic text: {arabic_text[:50]}...")
+            print(f"   Detected language: {detected_lang}")
+            print(f"   Expected: ara, Got: {detected_lang}")
+            
+            if detected_lang == 'ara':
+                print("   ✅ Arabic language detection PASSED")
+            else:
+                print("   ❌ Arabic language detection FAILED")
+            
+            print(f"   Translated: {response.get('translated_text', '')}")
         
         return success
 
