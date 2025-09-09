@@ -506,12 +506,24 @@ def main():
     tester.test_auto_detect_translation()
     tester.test_rtl_translation()
     tester.test_industry_context_translation()
-    tester.test_large_text_translation()
+    
+    # Language Detection Tests (Critical)
+    print("\n🔍 LANGUAGE DETECTION TESTS (CRITICAL)")
+    print("-" * 40)
+    tester.test_hebrew_language_detection()
+    tester.test_arabic_language_detection()
     
     # Document Processing Tests
     print("\n📄 DOCUMENT PROCESSING TESTS")
     print("-" * 30)
     tester.test_document_processing()
+    tester.test_hebrew_document_processing()
+    tester.test_arabic_document_processing()
+    
+    # File Download Tests
+    print("\n📥 FILE DOWNLOAD TESTS")
+    print("-" * 30)
+    tester.test_document_download()
     
     # History and Audit Tests
     print("\n📊 DATA RETRIEVAL TESTS")
