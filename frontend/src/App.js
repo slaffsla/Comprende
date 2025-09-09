@@ -127,12 +127,37 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   
-  // Settings state
-  const [settings, setSettings] = useState({
-    voiceInputEnabled: true,
-    voiceOutputEnabled: true,
-    autoTranslateVoice: false
+  // Settings state with localStorage persistence
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('comprende-settings');
+      return saved ? JSON.parse(saved) : {
+        voiceInputEnabled: true,
+        voiceOutputEnabled: true,
+        autoTranslateVoice: false,
+        defaultSourceLang: 'auto',
+        defaultTargetLang: 'eng'
+      };
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      return {
+        voiceInputEnabled: true,
+        voiceOutputEnabled: true,
+        autoTranslateVoice: false,
+        defaultSourceLang: 'auto',
+        defaultTargetLang: 'eng'
+      };
+    }
   });
+
+  // Save settings to localStorage whenever settings change
+  useEffect(() => {
+    try {
+      localStorage.setItem('comprende-settings', JSON.stringify(settings));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
+  }, [settings]);
   
   // Voice recognition refs
   const recognitionRef = useRef(null);
