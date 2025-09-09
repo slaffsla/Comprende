@@ -1282,21 +1282,85 @@ function App() {
                       </Button>
                     </div>
 
-                    {/* Active Meetings */}
+                    {/* Active Meetings with Video Interface */}
                     {meetings.length > 0 && (
                       <div className="space-y-3">
                         <h3 className="font-semibold">Active Meetings</h3>
                         {meetings.map(meeting => (
                           <div key={meeting.id} className="p-4 border rounded-lg">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-3">
                               <div>
                                 <h4 className="font-medium">{meeting.name}</h4>
                                 <p className="text-sm text-gray-500">
-                                  {meeting.participants.length} participants
+                                  {meeting.participants?.length || 0} participants
                                 </p>
                               </div>
-                              <Button size="sm">Join</Button>
+                              <div className="flex space-x-2">
+                                <Button size="sm" onClick={() => initializeWebRTC(meeting.id)}>
+                                  <Video className="h-4 w-4 mr-1" />
+                                  Join Video
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <Mic className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
+                            
+                            {/* Video Interface */}
+                            {localStream && (
+                              <div className="mt-4 p-4 bg-gray-900 rounded-lg">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="relative">
+                                    <video
+                                      id="local-video"
+                                      autoPlay
+                                      muted
+                                      playsInline
+                                      className="w-full h-48 bg-gray-800 rounded-lg object-cover"
+                                    />
+                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                      You
+                                    </div>
+                                  </div>
+                                  <div className="relative">
+                                    <div className="w-full h-48 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
+                                      <div className="text-center">
+                                        <Users className="h-8 w-8 mx-auto mb-2" />
+                                        <p className="text-sm">Waiting for participants...</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Meeting Controls */}
+                                <div className="flex items-center justify-center space-x-4 mt-4">
+                                  <Button variant="outline" size="sm">
+                                    <Mic className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    <Video className="h-4 w-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={() => {
+                                      if (localStream) {
+                                        localStream.getTracks().forEach(track => track.stop());
+                                        setLocalStream(null);
+                                      }
+                                      toast.success("Left the meeting");
+                                    }}
+                                  >
+                                    <PhoneOff className="h-4 w-4 mr-1" />
+                                    Leave
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    <Share className="h-4 w-4 mr-1" />
+                                    Share Screen
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
