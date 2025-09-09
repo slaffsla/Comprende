@@ -898,29 +898,38 @@ async def get_shared_files(user_id: str = "demo-user"):
     
     return [SharedFile(**file) for file in shared_files]
 
-@api_router.get("/files/download/{file_id}")
-async def download_shared_file(file_id: str, user_id: str = "demo-user"):
-    """Download a shared file"""
-    shared_file_data = await db.shared_files.find_one({"id": file_id})
-    if not shared_file_data:
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    shared_file = SharedFile(**shared_file_data)
-    
-    # Check permissions
-    if user_id not in shared_file.shared_with and shared_file.shared_by != user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    if not Path(shared_file.file_path).exists():
-        raise HTTPException(status_code=404, detail="File not found on disk")
-    
-    await log_audit_event(user_id, "DOWNLOAD", "FILE", {"file_id": file_id, "filename": shared_file.original_name})
-    
-    return FileResponse(
-        path=shared_file.file_path,
-        filename=shared_file.original_name,
-        media_type='application/octet-stream'
-    )
+@api_router.post("/documents/download")
+async def download_document_content(request: dict):
+    """Download document content as a file"""
+    try:
+        content = request.get('content', '')
+        filename = request.get('filename', 'document.txt')
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="No content provided")
+        
+        # Create a temporary file
+        temp_dir = Path("/tmp/comprende_downloads")
+        temp_dir.mkdir(exist_ok=True)
+        
+        file_id = str(uuid.uuid4())
+        temp_file_path = temp_dir / f"{file_id}_{filename}"
+        
+        # Write content to temporary file
+        async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
+            await f.write(content)
+        
+        # Return file response
+        return FileResponse(
+            path=str(temp_file_path),
+            filename=filename,
+            media_type='text/plain',
+            background=BackgroundTasks()  # This will clean up the file after sending
+        )
+        
+    except Exception as e:
+        logger.error(f"Document download error: {e}")
+        raise HTTPException(status_code=500, detail="Download failed")
 
 @api_router.get("/notifications")
 async def get_notifications(user_id: str = "demo-user", limit: int = 50):
