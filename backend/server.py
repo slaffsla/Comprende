@@ -204,7 +204,16 @@ async def log_audit_event(user_id: Optional[str], action: str, resource: str, de
             details=details,
             ip_address=ip_address
         )
-        await db.audit_logs.insert_one(audit_log.dict())
+        
+        audit_dict = audit_log.dict()
+        # Ensure all datetime objects are converted to strings for MongoDB
+        if 'timestamp' in audit_dict:
+            audit_dict['timestamp'] = audit_dict['timestamp'].isoformat()
+        
+        # Remove any potential ObjectId fields
+        audit_dict.pop('_id', None)
+        
+        await db.audit_logs.insert_one(audit_dict)
     except Exception as e:
         logger.error(f"Audit logging error: {e}")
 
