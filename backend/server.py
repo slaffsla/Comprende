@@ -685,9 +685,19 @@ async def translate_text(request: TranslationRequest, user_id: Optional[str] = N
         result_dict = result.dict()
         result_dict['original_text'] = encrypt_data(result_dict['original_text'])
         result_dict['translated_text'] = encrypt_data(result_dict['translated_text'])
+        
+        # Ensure all datetime objects are converted to strings for MongoDB
+        if 'created_at' in result_dict:
+            result_dict['created_at'] = result_dict['created_at'].isoformat()
+        
+        # Remove any potential ObjectId fields and ensure clean UUID-based storage
+        result_dict.pop('_id', None)
+        
         await db.translations.insert_one(result_dict)
     except Exception as e:
         logger.error(f"Failed to store translation: {e}")
+        # Don't fail the API call if storage fails
+        pass
     
     # Log audit event
     await log_audit_event(
