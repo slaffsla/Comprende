@@ -241,8 +241,7 @@ metadata:
 test_plan:
   current_focus:
     - "Language Detection Accuracy"
-  stuck_tasks:
-    - "Language Detection Accuracy"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
