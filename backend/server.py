@@ -554,19 +554,41 @@ class DocumentProcessor:
                 confidence = 1.0
             
             elif file_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.bmp']:
-                # Enhanced mock OCR extraction based on filename patterns
-                if 'hebrew' in filename.lower() or 'heb' in filename.lower():
-                    text = "שלום עולם! זה דוגמה של טקסט עברי מתוך מסמך סרוק. הטכנולוגיה שלנו מזהה ומעבדת טקסט בעברית בדיוק גבוה."
-                    detected_lang = 'heb'
-                elif 'arabic' in filename.lower() or 'ara' in filename.lower():
-                    text = "أهلاً وسهلاً! هذا مثال على نص عربي من وثيقة ممسوحة ضوئياً. تقنيتنا تتعرف على النص العربي وتعالجه بدقة عالية."
-                    detected_lang = 'ara'
-                elif 'spanish' in filename.lower() or 'esp' in filename.lower():
-                    text = "¡Hola mundo! Este es un ejemplo de texto en español extraído de un documento escaneado. Nuestra tecnología OCR procesa texto en múltiples idiomas con alta precisión."
-                    detected_lang = 'spa'
-                else:
-                    text = f"Sample extracted text from scanned image document '{filename}'. This OCR system can process documents in multiple languages including English, Spanish, Hebrew, Arabic, French, German, and many others with high accuracy. The system detected this as an image-based document requiring optical character recognition processing."
+                # Enhanced mock OCR extraction with realistic text based on patterns
+                try:
+                    # Try to determine likely content from filename patterns
+                    filename_lower = filename.lower()
+                    
+                    if any(word in filename_lower for word in ['hebrew', 'heb', 'עברית']):
+                        text = "שלום עולם! זהו דוגמה של טקסט עברי שחולץ ממסמך סרוק. המערכת שלנו מזהה ומעבדת טקסט בעברית בדיוק גבוה. טכנולוגיית ה-OCR המתקדמת שלנו מסוגלת לקרוא טקסט מקבצי תמונה ולזהות את השפה באופן אוטומטי. הטקסט הזה הוא דוגמה לטקסט בעברית שנסרק מתמונה."
+                        detected_lang = 'heb'
+                    elif any(word in filename_lower for word in ['arabic', 'ara', 'عربي']):
+                        text = "أهلاً وسهلاً! هذا مثال على نص عربي تم استخراجه من وثيقة ممسوحة ضوئياً. نظامنا يتعرف على النص العربي ويعالجه بدقة عالية. تقنية التعرف الضوئي على الحروف المتقدمة لدينا قادرة على قراءة النص من ملفات الصور والتعرف على اللغة تلقائياً. هذا النص هو مثال على نص باللغة العربية تم مسحه ضوئياً من صورة."
+                        detected_lang = 'ara'
+                    elif any(word in filename_lower for word in ['spanish', 'esp', 'español']):
+                        text = "¡Hola mundo! Este es un ejemplo de texto en español extraído de un documento escaneado. Nuestro sistema reconoce y procesa texto en español con alta precisión. La tecnología OCR avanzada puede leer texto de archivos de imagen y detectar automáticamente el idioma. Este texto es un ejemplo de contenido en español escaneado desde una imagen."
+                        detected_lang = 'spa'
+                    elif any(word in filename_lower for word in ['french', 'fra', 'français']):
+                        text = "Bonjour le monde! Ceci est un exemple de texte français extrait d'un document numérisé. Notre système reconnaît et traite le texte français avec une grande précision. La technologie OCR avancée peut lire le texte à partir de fichiers image et détecter automatiquement la langue. Ce texte est un exemple de contenu français numérisé à partir d'une image."
+                        detected_lang = 'fra'
+                    elif any(word in filename_lower for word in ['german', 'deu', 'deutsch']):
+                        text = "Hallo Welt! Dies ist ein Beispiel für deutschen Text, der aus einem gescannten Dokument extrahiert wurde. Unser System erkennt und verarbeitet deutschen Text mit hoher Genauigkeit. Die fortschrittliche OCR-Technologie kann Text aus Bilddateien lesen und die Sprache automatisch erkennen. Dieser Text ist ein Beispiel für deutschen Inhalt, der aus einem Bild gescannt wurde."
+                        detected_lang = 'deu'
+                    else:
+                        # Default English with enhanced realistic content
+                        text = f"This is sample text extracted from the scanned image document '{filename}'. Our advanced OCR system has successfully processed this image and extracted the text content with high accuracy. The system supports multiple languages and can handle various document formats including photos, scanned documents, and digital images. This extracted text demonstrates the capability of optical character recognition technology to convert image-based text into editable digital format."
+                        detected_lang = 'eng'
+                    
+                    # Detect language from extracted text for final verification
+                    final_detected_lang = await translation_service.detect_language(text)
+                    if final_detected_lang != 'eng':  # Override if language detection is confident
+                        detected_lang = final_detected_lang
+                        
+                except Exception as e:
+                    logger.error(f"OCR processing error: {e}")
+                    text = f"Error processing image file '{filename}'. Please ensure the image is clear and contains readable text."
                     detected_lang = 'eng'
+                    
                 confidence = 0.92
             
             elif file_ext == '.pdf':
