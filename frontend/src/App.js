@@ -107,8 +107,24 @@ function App() {
   const [activeTab, setActiveTab] = useState("translate");
   const [sourceText, setSourceText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
-  const [sourceLang, setSourceLang] = useState("auto");
-  const [targetLang, setTargetLang] = useState("eng");
+  const [sourceLang, setSourceLang] = useState(() => {
+    try {
+      const saved = localStorage.getItem('comprende-settings');
+      const settings = saved ? JSON.parse(saved) : {};
+      return settings.defaultSourceLang || 'auto';
+    } catch (error) {
+      return 'auto';
+    }
+  });
+  const [targetLang, setTargetLang] = useState(() => {
+    try {
+      const saved = localStorage.getItem('comprende-settings');
+      const settings = saved ? JSON.parse(saved) : {};
+      return settings.defaultTargetLang || 'eng';
+    } catch (error) {
+      return 'eng';
+    }
+  });
   const [context, setContext] = useState("general");
   const [industry, setIndustry] = useState("general");
   const [isLoading, setIsLoading] = useState(false);
