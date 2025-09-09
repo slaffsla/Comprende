@@ -659,7 +659,13 @@ function App() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium">Default Source Language</label>
-                      <Select defaultValue="auto">
+                      <Select 
+                        value={settings.defaultSourceLang} 
+                        onValueChange={(value) => {
+                          setSettings(prev => ({...prev, defaultSourceLang: value}));
+                          setSourceLang(value);
+                        }}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -673,7 +679,13 @@ function App() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Default Target Language</label>
-                      <Select defaultValue="eng">
+                      <Select 
+                        value={settings.defaultTargetLang}
+                        onValueChange={(value) => {
+                          setSettings(prev => ({...prev, defaultTargetLang: value}));
+                          setTargetLang(value);
+                        }}
+                      >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -715,6 +727,27 @@ function App() {
                           Auto-translate voice input
                         </label>
                       </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          const defaultSettings = {
+                            voiceInputEnabled: true,
+                            voiceOutputEnabled: true,
+                            autoTranslateVoice: false,
+                            defaultSourceLang: 'auto',
+                            defaultTargetLang: 'eng'
+                          };
+                          setSettings(defaultSettings);
+                          setSourceLang('auto');
+                          setTargetLang('eng');
+                          toast.success("Settings reset to defaults");
+                        }}
+                      >
+                        Reset to Defaults
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>
