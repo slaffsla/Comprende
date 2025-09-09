@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
-import { Camera, Upload, Languages, Shield, Users, FileText, Mic, MicOff, Volume2, Copy, Download, Settings, Bell, User, Globe, Zap } from "lucide-react";
+import { Camera, Upload, Languages, Shield, Users, FileText, Mic, MicOff, Volume2, Copy, Download, Settings, Bell, User, Globe, Zap, Send, Play, Pause, X, Plus, Search, Filter } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
@@ -10,35 +10,97 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Badge } from "./components/ui/badge";
 import { Separator } from "./components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Language options
+// Expanded language options covering major world languages
 const LANGUAGES = {
   eng: "English",
-  spa: "Spanish", 
-  heb: "Hebrew",
-  ara: "Arabic",
-  fra: "French",
-  deu: "German",
-  ita: "Italian",
-  por: "Portuguese",
-  rus: "Russian",
-  chi: "Chinese"
+  spa: "Spanish (Español)", 
+  heb: "Hebrew (עברית)",
+  ara: "Arabic (العربية)",
+  fra: "French (Français)",
+  deu: "German (Deutsch)",
+  ita: "Italian (Italiano)",
+  por: "Portuguese (Português)",
+  rus: "Russian (Русский)",
+  chi: "Chinese (中文)",
+  jpn: "Japanese (日本語)",
+  kor: "Korean (한국어)",
+  hin: "Hindi (हिन्दी)",
+  tur: "Turkish (Türkçe)",
+  pol: "Polish (Polski)",
+  nld: "Dutch (Nederlands)",
+  swe: "Swedish (Svenska)",
+  nor: "Norwegian (Norsk)",
+  dan: "Danish (Dansk)",
+  fin: "Finnish (Suomi)",
+  hun: "Hungarian (Magyar)",
+  ces: "Czech (Čeština)",
+  slk: "Slovak (Slovenčina)",
+  ron: "Romanian (Română)",
+  bul: "Bulgarian (Български)",
+  hrv: "Croatian (Hrvatski)",
+  srp: "Serbian (Српски)",
+  ukr: "Ukrainian (Українська)",
+  ell: "Greek (Ελληνικά)",
+  tha: "Thai (ไทย)",
+  vie: "Vietnamese (Tiếng Việt)",
+  ind: "Indonesian (Bahasa Indonesia)",
+  msa: "Malay (Bahasa Melayu)",
+  tgl: "Filipino (Tagalog)",
+  swa: "Swahili (Kiswahili)",
+  amh: "Amharic (አማርኛ)",
+  ben: "Bengali (বাংলা)",
+  guj: "Gujarati (ગુજરાતી)",
+  pan: "Punjabi (ਪੰਜਾਬੀ)",
+  tam: "Tamil (தமிழ்)",
+  tel: "Telugu (తెలుగు)",
+  mal: "Malayalam (മലയാളം)",
+  kan: "Kannada (ಕನ್ನಡ)",
+  mar: "Marathi (मराठी)",
+  nep: "Nepali (नेपाली)",
+  sin: "Sinhala (සිංහල)",
+  mya: "Burmese (မြန်မာ)",
+  khm: "Khmer (ខ្មែរ)",
+  lao: "Lao (ລາວ)",
+  kat: "Georgian (ქართული)",
+  arm: "Armenian (Հայերեն)",
+  aze: "Azerbaijani (Azərbaycan)",
+  kaz: "Kazakh (Қазақ)",
+  kir: "Kyrgyz (Кыргыз)",
+  uzb: "Uzbek (O'zbek)",
+  tgk: "Tajik (Тоҷикӣ)",
+  mon: "Mongolian (Монгол)",
+  bod: "Tibetan (བོད་ཡིག)",
+  uig: "Uyghur (ئۇيغۇرچە)"
 };
 
 const INDUSTRIES = {
   general: "General",
   healthcare: "Healthcare",
   construction: "Construction", 
-  banking: "Banking",
+  banking: "Banking & Finance",
   government: "Government",
   education: "Education",
   legal: "Legal",
-  technology: "Technology"
+  technology: "Technology",
+  manufacturing: "Manufacturing",
+  retail: "Retail & E-commerce",
+  hospitality: "Hospitality & Tourism",
+  transportation: "Transportation & Logistics",
+  energy: "Energy & Utilities",
+  media: "Media & Entertainment",
+  consulting: "Consulting",
+  insurance: "Insurance",
+  realEstate: "Real Estate",
+  agriculture: "Agriculture",
+  pharmaceutical: "Pharmaceutical",
+  automotive: "Automotive"
 };
 
 function App() {
@@ -51,15 +113,30 @@ function App() {
   const [industry, setIndustry] = useState("general");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [file, setFile] = useState(null);
   const [documentResult, setDocumentResult] = useState(null);
   const [translationHistory, setTranslationHistory] = useState([]);
   const [healthStatus, setHealthStatus] = useState(null);
+  const [detectedLanguage, setDetectedLanguage] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [meetings, setMeetings] = useState([]);
+  const [sharedFiles, setSharedFiles] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  
+  // Voice recognition refs
+  const recognitionRef = useRef(null);
+  const speechSynthRef = useRef(null);
 
   // Check system health on load
   useEffect(() => {
     checkHealth();
     loadTranslationHistory();
+    initializeVoiceRecognition();
+    loadUserData();
   }, []);
 
   const checkHealth = async () => {
@@ -81,6 +158,58 @@ function App() {
     }
   };
 
+  const loadUserData = async () => {
+    // Mock user data - in real app, this would come from authentication
+    setCurrentUser({
+      id: "user-1",
+      name: "Demo User",
+      email: "demo@comprende.com",
+      avatar: "👤"
+    });
+    
+    setUsers([
+      { id: "user-1", name: "Demo User", status: "online", avatar: "👤" },
+      { id: "user-2", name: "Alice Johnson", status: "online", avatar: "👩" },
+      { id: "user-3", name: "Bob Smith", status: "away", avatar: "👨" },
+      { id: "user-4", name: "Carol Davis", status: "offline", avatar: "👩‍💼" }
+    ]);
+
+    setNotifications([
+      { id: 1, type: "translation", message: "New translation request from Alice", time: "2 min ago" },
+      { id: 2, type: "meeting", message: "Team meeting starting in 15 minutes", time: "15 min ago" },
+      { id: 3, type: "file", message: "Document shared by Bob", time: "1 hour ago" }
+    ]);
+  };
+
+  const initializeVoiceRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSourceText(transcript);
+        setIsListening(false);
+        toast.success("Voice input captured");
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+        toast.error("Voice recognition failed");
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    } else {
+      console.warn('Speech recognition not supported');
+    }
+  };
+
   const handleTranslate = async () => {
     if (!sourceText.trim()) {
       toast.error("Please enter text to translate");
@@ -88,7 +217,7 @@ function App() {
     }
 
     setIsLoading(true);
-    setTranslatedText(""); // Clear previous result
+    setTranslatedText("");
     
     try {
       console.log("Starting translation request...");
@@ -100,39 +229,34 @@ function App() {
         industry: industry
       };
       
-      console.log("Request body:", requestBody);
-      console.log("API URL:", `${API}/translate`);
-      
       const response = await axios.post(`${API}/translate`, requestBody, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 30000 // 30 second timeout
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000
       });
 
-      console.log("Translation response:", response.data);
-      
       if (response.data && response.data.translated_text) {
         setTranslatedText(response.data.translated_text);
+        setDetectedLanguage(response.data.source_language);
         toast.success(`Translation completed with ${(response.data.confidence * 100).toFixed(1)}% confidence`);
-        loadTranslationHistory(); // Refresh history
+        loadTranslationHistory();
       } else {
         toast.error("Invalid response from translation service");
       }
     } catch (error) {
       console.error("Translation failed:", error);
-      if (error.response) {
-        // Server responded with error status
-        toast.error(`Translation failed: ${error.response.data?.detail || error.response.statusText}`);
-      } else if (error.request) {
-        // Request was made but no response received
-        toast.error("Translation failed: No response from server");
-      } else {
-        // Something else happened
-        toast.error(`Translation failed: ${error.message}`);
-      }
+      handleApiError(error, "Translation failed");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApiError = (error, defaultMessage) => {
+    if (error.response) {
+      toast.error(`${defaultMessage}: ${error.response.data?.detail || error.response.statusText}`);
+    } else if (error.request) {
+      toast.error(`${defaultMessage}: No response from server`);
+    } else {
+      toast.error(`${defaultMessage}: ${error.message}`);
     }
   };
 
@@ -145,49 +269,189 @@ function App() {
     setIsLoading(true);
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("languages", "eng,heb,ara");
+    formData.append("languages", "eng,heb,ara,spa,fra");
     formData.append("translate_to", targetLang);
 
     try {
       const response = await axios.post(`${API}/documents/process`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000
       });
 
       setDocumentResult(response.data);
+      setUploadedFiles(prev => [...prev, { ...response.data, file: file }]);
       toast.success("Document processed successfully");
     } catch (error) {
       console.error("Document processing failed:", error);
-      toast.error("Document processing failed. Please try again.");
+      if (error.code === 'EACCES' || error.message.includes('permission')) {
+        toast.error("File could not be processed due to file protection or permissions");
+      } else {
+        handleApiError(error, "Document processing failed");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
+  const copyToClipboard = async (text) => {
+    try {
+      // Try modern Clipboard API first
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast.success("Copied to clipboard");
+      } else {
+        // Fallback for older browsers or restricted environments
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          toast.success("Copied to clipboard");
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
+          toast.error("Copy not supported in this environment");
+        }
+        
+        document.body.removeChild(textArea);
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      // Create a temporary input for manual copy
+      const input = document.createElement('input');
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      toast.info("Text selected - press Ctrl+C (Cmd+C on Mac) to copy");
+      setTimeout(() => document.body.removeChild(input), 5000);
+    }
   };
 
   const speakText = (text, lang) => {
     if ('speechSynthesis' in window) {
+      // Stop any ongoing speech
+      speechSynthesis.cancel();
+      
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang === 'heb' ? 'he-IL' : lang === 'ara' ? 'ar-SA' : 'en-US';
+      
+      // Map language codes to speech synthesis languages
+      const langMap = {
+        'heb': 'he-IL',
+        'ara': 'ar-SA',
+        'spa': 'es-ES',
+        'fra': 'fr-FR',
+        'deu': 'de-DE',
+        'ita': 'it-IT',
+        'por': 'pt-PT',
+        'rus': 'ru-RU',
+        'chi': 'zh-CN',
+        'jpn': 'ja-JP',
+        'kor': 'ko-KR',
+        'hin': 'hi-IN',
+        'tur': 'tr-TR'
+      };
+      
+      utterance.lang = langMap[lang] || 'en-US';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        toast.error("Speech synthesis failed");
+      };
+      
       speechSynthesis.speak(utterance);
+    } else {
+      toast.error("Speech synthesis not supported");
     }
   };
 
-  // Mock voice recognition
   const toggleVoiceInput = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
-      toast.info("Voice input activated (mock)");
-      // In real implementation, would use Web Speech API
-      setTimeout(() => {
-        setSourceText("This is mock voice input text");
-        setIsListening(false);
-        toast.success("Voice input captured");
-      }, 2000);
+    if (!recognitionRef.current) {
+      toast.error("Voice recognition not supported in this browser");
+      return;
     }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      // Set recognition language based on source language
+      const langMap = {
+        'heb': 'he-IL',
+        'ara': 'ar-SA',
+        'spa': 'es-ES',
+        'fra': 'fr-FR',
+        'deu': 'de-DE',
+        'ita': 'it-IT',
+        'por': 'pt-PT',
+        'rus': 'ru-RU',
+        'chi': 'zh-CN',
+        'jpn': 'ja-JP',
+        'kor': 'ko-KR'
+      };
+      
+      recognitionRef.current.lang = langMap[sourceLang] || 'en-US';
+      recognitionRef.current.start();
+      setIsListening(true);
+      toast.info("Listening... Speak now");
+    }
+  };
+
+  const downloadFile = (content, filename, type = 'text/plain') => {
+    try {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("File downloaded successfully");
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error("Download failed");
+    }
+  };
+
+  const createMeeting = () => {
+    const meetingId = `meeting-${Date.now()}`;
+    const newMeeting = {
+      id: meetingId,
+      name: "Translation Meeting",
+      participants: [currentUser],
+      createdAt: new Date(),
+      status: "active"
+    };
+    setMeetings(prev => [...prev, newMeeting]);
+    toast.success("Meeting created! Invite link copied to clipboard");
+    copyToClipboard(`${window.location.origin}/meeting/${meetingId}`);
+  };
+
+  const shareFile = (file) => {
+    const sharedFile = {
+      id: `file-${Date.now()}`,
+      name: file.filename,
+      sharedBy: currentUser.name,
+      sharedAt: new Date(),
+      type: file.document_type
+    };
+    setSharedFiles(prev => [...prev, sharedFile]);
+    toast.success("File shared with team");
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    toast.success("Notifications cleared");
   };
 
   return (
@@ -196,28 +460,122 @@ function App() {
       
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-md shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
                 <Globe className="h-6 w-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Comprende</h1>
-                <p className="text-sm text-gray-600">Universal Communication Platform</p>
+              <div className="hidden sm:block">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Comprende</h1>
+                <p className="text-xs sm:text-sm text-gray-600">Universal Communication Platform</p>
+              </div>
+              <div className="sm:hidden">
+                <h1 className="text-lg font-bold text-gray-900">Comprende</h1>
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <Badge variant={healthStatus?.status === "healthy" ? "default" : "destructive"} className="text-xs">
-                {healthStatus?.status || "checking..."}
-              </Badge>
-              <Button variant="ghost" size="sm">
-                <Bell className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {healthStatus?.status && (
+                <Badge variant={healthStatus.status === "healthy" ? "default" : "destructive"} className="text-xs hidden sm:inline-flex">
+                  {healthStatus.status}
+                </Badge>
+              )}
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="h-4 w-4" />
+                    {notifications.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Notifications</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3">
+                    {notifications.length > 0 ? (
+                      <>
+                        {notifications.map(notification => (
+                          <div key={notification.id} className="p-3 bg-gray-50 rounded-lg">
+                            <p className="text-sm">{notification.message}</p>
+                            <p className="text-xs text-gray-500">{notification.time}</p>
+                          </div>
+                        ))}
+                        <Button onClick={clearNotifications} variant="outline" className="w-full">
+                          Clear All
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-gray-500 text-center">No notifications</p>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Settings</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Default Source Language</label>
+                      <Select defaultValue="auto">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="auto">Auto-detect</SelectItem>
+                          {Object.entries(LANGUAGES).map(([code, name]) => (
+                            <SelectItem key={code} value={code}>{name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Default Target Language</label>
+                      <Select defaultValue="eng">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(LANGUAGES).map(([code, name]) => (
+                            <SelectItem key={code} value={code}>{name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Voice Settings</label>
+                      <div className="space-y-2 mt-2">
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" defaultChecked />
+                          Enable voice input
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" defaultChecked />
+                          Enable voice output
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" />
+                          Auto-translate voice input
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Button variant="ghost" size="sm">
                 <User className="h-4 w-4" />
               </Button>
@@ -227,31 +585,30 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="translate" className="flex items-center space-x-2">
               <Languages className="h-4 w-4" />
-              <span>Translate</span>
+              <span className="hidden sm:inline">Translate</span>
             </TabsTrigger>
             <TabsTrigger value="documents" className="flex items-center space-x-2">
               <FileText className="h-4 w-4" />
-              <span>Documents</span>
+              <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
             <TabsTrigger value="collaborate" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
-              <span>Collaborate</span>
+              <span className="hidden sm:inline">Collaborate</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="flex items-center space-x-2">
               <Shield className="h-4 w-4" />
-              <span>Security</span>
+              <span className="hidden sm:inline">Security</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Translation Tab */}
           <TabsContent value="translate" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Translation Interface */}
               <div className="lg:col-span-2">
                 <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
                   <CardHeader>
@@ -260,38 +617,49 @@ function App() {
                       <span>Real-time Translation</span>
                     </CardTitle>
                     <CardDescription>
-                      Translate text between multiple languages with AI-powered context awareness
+                      Translate text between {Object.keys(LANGUAGES).length}+ languages with AI-powered context awareness
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Language Selection */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Select value={sourceLang} onValueChange={setSourceLang}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Source Language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="auto">Auto-detect</SelectItem>
-                          {Object.entries(LANGUAGES).map(([code, name]) => (
-                            <SelectItem key={code} value={code}>{name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">From</label>
+                        <Select value={sourceLang} onValueChange={setSourceLang}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Source Language" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            <SelectItem value="auto">Auto-detect</SelectItem>
+                            {Object.entries(LANGUAGES).map(([code, name]) => (
+                              <SelectItem key={code} value={code}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {detectedLanguage && sourceLang === "auto" && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Detected: {LANGUAGES[detectedLanguage] || detectedLanguage}
+                          </p>
+                        )}
+                      </div>
 
-                      <Button variant="ghost" className="flex items-center justify-center">
+                      <Button variant="ghost" className="flex items-center justify-center mt-6">
                         <Languages className="h-4 w-4" />
                       </Button>
 
-                      <Select value={targetLang} onValueChange={setTargetLang}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Target Language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(LANGUAGES).map(([code, name]) => (
-                            <SelectItem key={code} value={code}>{name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">To</label>
+                        <Select value={targetLang} onValueChange={setTargetLang}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Target Language" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {Object.entries(LANGUAGES).map(([code, name]) => (
+                              <SelectItem key={code} value={code}>{name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     {/* Context Selection */}
@@ -312,7 +680,7 @@ function App() {
                         <SelectTrigger>
                           <SelectValue placeholder="Industry" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-60 overflow-y-auto">
                           {Object.entries(INDUSTRIES).map(([code, name]) => (
                             <SelectItem key={code} value={code}>{name}</SelectItem>
                           ))}
@@ -333,10 +701,10 @@ function App() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="absolute bottom-2 right-2"
+                          className={`absolute bottom-2 right-2 ${isListening ? 'text-red-500' : ''}`}
                           onClick={toggleVoiceInput}
                         >
-                          {isListening ? <MicOff className="h-4 w-4 text-red-500" /> : <Mic className="h-4 w-4" />}
+                          {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                         </Button>
                       </div>
 
@@ -372,8 +740,16 @@ function App() {
                               variant="ghost"
                               size="sm"
                               onClick={() => speakText(translatedText, targetLang)}
+                              disabled={isSpeaking}
                             >
-                              <Volume2 className="h-4 w-4" />
+                              {isSpeaking ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => downloadFile(translatedText, 'translation.txt')}
+                            >
+                              <Download className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -383,7 +759,7 @@ function App() {
                 </Card>
               </div>
 
-              {/* Quick Actions & History */}
+              {/* Sidebar */}
               <div className="space-y-6">
                 {/* Quick Actions */}
                 <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
@@ -395,11 +771,11 @@ function App() {
                       <Camera className="h-4 w-4 mr-2" />
                       Scan Document
                     </Button>
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start" onClick={toggleVoiceInput}>
                       <Mic className="h-4 w-4 mr-2" />
                       Voice Translation
                     </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => setActiveTab("collaborate")}>
+                    <Button variant="outline" className="w-full justify-start" onClick={createMeeting}>
                       <Users className="h-4 w-4 mr-2" />
                       Start Meeting
                     </Button>
@@ -462,10 +838,29 @@ function App() {
                     </p>
                     <Input
                       type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.txt,.docx"
+                      accept=".pdf,.jpg,.jpeg,.png,.txt,.docx,.tiff,.bmp"
                       onChange={(e) => setFile(e.target.files[0])}
                       className="max-w-xs mx-auto"
                     />
+                  </div>
+                  
+                  {/* Mobile Scan Button */}
+                  <div className="mt-4 sm:hidden">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.capture = 'environment';
+                        input.onchange = (e) => setFile(e.target.files[0]);
+                        input.click();
+                      }}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Scan with Camera
+                    </Button>
                   </div>
                 </div>
 
@@ -475,9 +870,60 @@ function App() {
                       <FileText className="h-5 w-5 text-blue-600" />
                       <span className="font-medium text-blue-900">{file.name}</span>
                     </div>
-                    <Button onClick={handleDocumentUpload} disabled={isLoading}>
+                    <Button 
+                      onClick={handleDocumentUpload} 
+                      disabled={isLoading}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+                    >
                       {isLoading ? "Processing..." : "Process Document"}
                     </Button>
+                  </div>
+                )}
+
+                {/* Uploaded Files */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-800">Processed Documents</h3>
+                    {uploadedFiles.map((doc, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium">{doc.filename}</h4>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => shareFile(doc)}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Share
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadFile(doc.extracted_text, `${doc.filename}_extracted.txt`)}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                            <div>
+                              <span className="font-medium">Language:</span>
+                              <Badge className="ml-2">{LANGUAGES[doc.detected_language]}</Badge>
+                            </div>
+                            <div>
+                              <span className="font-medium">Confidence:</span>
+                              <span className="ml-2">{(doc.confidence * 100).toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div className="p-3 bg-gray-50 rounded border max-h-32 overflow-y-auto">
+                            <p className="text-sm">{doc.extracted_text}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 )}
 
@@ -520,7 +966,11 @@ function App() {
                           <Copy className="h-4 w-4 mr-1" />
                           Copy Text
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => downloadFile(documentResult.extracted_text, `${documentResult.filename}_extracted.txt`)}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
@@ -534,15 +984,103 @@ function App() {
 
           {/* Collaborate Tab */}
           <TabsContent value="collaborate" className="space-y-6">
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Team Collaboration</h3>
-              <p className="text-gray-500 mb-6">
-                Real-time group chats, file sharing, and multi-user conferencing with live translation
-              </p>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                Coming Soon
-              </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Collaboration Area */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2 text-slate-800">
+                      <Users className="h-5 w-5 text-blue-600" />
+                      <span>Team Collaboration</span>
+                    </CardTitle>
+                    <CardDescription>
+                      Real-time communication with live translation
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex space-x-4">
+                      <Button onClick={createMeeting} className="bg-green-600 hover:bg-green-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Start New Meeting
+                      </Button>
+                      <Button variant="outline">
+                        <Search className="h-4 w-4 mr-2" />
+                        Join Meeting
+                      </Button>
+                    </div>
+
+                    {/* Active Meetings */}
+                    {meetings.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="font-semibold">Active Meetings</h3>
+                        {meetings.map(meeting => (
+                          <div key={meeting.id} className="p-4 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium">{meeting.name}</h4>
+                                <p className="text-sm text-gray-500">
+                                  {meeting.participants.length} participants
+                                </p>
+                              </div>
+                              <Button size="sm">Join</Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Shared Files */}
+                    {sharedFiles.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="font-semibold">Shared Files</h3>
+                        {sharedFiles.map(file => (
+                          <div key={file.id} className="p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{file.name}</p>
+                                <p className="text-sm text-gray-500">
+                                  Shared by {file.sharedBy}
+                                </p>
+                              </div>
+                              <Button variant="outline" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Team Sidebar */}
+              <div className="space-y-6">
+                <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="text-slate-800">Team Members</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {users.map(user => (
+                        <div key={user.id} className="flex items-center space-x-3">
+                          <div className="text-2xl">{user.avatar}</div>
+                          <div className="flex-1">
+                            <p className="font-medium">{user.name}</p>
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                user.status === 'online' ? 'bg-green-500' :
+                                user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
+                              }`}></div>
+                              <span className="text-xs text-gray-500 capitalize">{user.status}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
