@@ -772,9 +772,19 @@ async def process_document(
             result_dict['extracted_text'] = encrypt_data(result_dict['extracted_text'])
             if result_dict['translated_text']:
                 result_dict['translated_text'] = encrypt_data(result_dict['translated_text'])
+            
+            # Ensure all datetime objects are converted to strings for MongoDB
+            if 'created_at' in result_dict:
+                result_dict['created_at'] = result_dict['created_at'].isoformat()
+            
+            # Remove any potential ObjectId fields
+            result_dict.pop('_id', None)
+            
             await db.documents.insert_one(result_dict)
         except Exception as e:
             logger.error(f"Failed to store document result: {e}")
+            # Don't fail the API call if storage fails
+            pass
         
         # Schedule cleanup
         if background_tasks and file_path:
