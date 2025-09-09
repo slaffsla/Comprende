@@ -550,7 +550,7 @@ class DocumentProcessor:
                 # Read text file directly
                 async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
                     text = await f.read()
-                detected_lang = translation_service.detect_language(text)
+                detected_lang = await translation_service.detect_language(text)
                 confidence = 1.0
             
             elif file_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.bmp']:
