@@ -658,15 +658,30 @@ function App() {
                       <label className="text-sm font-medium">Voice Settings</label>
                       <div className="space-y-2 mt-2">
                         <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" defaultChecked />
+                          <input 
+                            type="checkbox" 
+                            className="mr-2" 
+                            checked={settings.voiceInputEnabled}
+                            onChange={(e) => setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}))}
+                          />
                           Enable voice input
                         </label>
                         <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" defaultChecked />
+                          <input 
+                            type="checkbox" 
+                            className="mr-2" 
+                            checked={settings.voiceOutputEnabled}
+                            onChange={(e) => setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}))}
+                          />
                           Enable voice output
                         </label>
                         <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
+                          <input 
+                            type="checkbox" 
+                            className="mr-2" 
+                            checked={settings.autoTranslateVoice}
+                            onChange={(e) => setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}))}
+                          />
                           Auto-translate voice input
                         </label>
                       </div>
