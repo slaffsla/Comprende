@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
-import { Camera, Upload, Languages, Shield, Users, FileText, Mic, MicOff, Volume2, Copy, Download, Settings, Bell, User, Globe, Zap, Send, Play, Pause, X, Plus, Search, Filter } from "lucide-react";
+import { Camera, Upload, Languages, Shield, Users, FileText, Mic, MicOff, Volume2, Copy, Download, Settings, Bell, User, Globe, Zap, Send, Play, Pause, X, Plus, Search, Filter, Video, PhoneOff, Share } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Input } from "./components/ui/input";
