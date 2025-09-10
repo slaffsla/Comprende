@@ -1445,9 +1445,14 @@ async def get_meeting(meeting_id: str):
     try:
         meeting_data = await db.meetings.find_one({"id": meeting_id})
         if not meeting_data:
-            raise HTTPException(status_code=404, detail="Meeting not found")
+            raise HTTPException(status_code=404, detail="Meeting not found or expired")
+        
+        # Clean up ObjectId for JSON serialization
+        meeting_data.pop('_id', None)
         
         return meeting_data
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Get meeting error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get meeting")
