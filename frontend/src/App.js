@@ -292,7 +292,71 @@ function App() {
     }
   };
 
-  const logoutUser = () => {
+  const speakText = (text, language = 'en') => {
+    if (!settings.voiceOutputEnabled) {
+      toast.error("Voice output is disabled in settings");
+      return;
+    }
+
+    if (!('speechSynthesis' in window)) {
+      toast.error("Text-to-speech not supported in this browser");
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Map language codes to speech synthesis language codes
+    const voiceLanguageMatrix = {
+      'eng': 'en-US',
+      'spa': 'es-ES',
+      'fra': 'fr-FR',
+      'deu': 'de-DE',
+      'heb': 'he-IL',
+      'ara': 'ar-SA',
+      'ita': 'it-IT',
+      'por': 'pt-PT',
+      'rus': 'ru-RU',
+      'chi': 'zh-CN',
+      'jpn': 'ja-JP',
+      'kor': 'ko-KR',
+      'hin': 'hi-IN',
+      'tur': 'tr-TR',
+      'pol': 'pl-PL',
+      'nld': 'nl-NL',
+      'swe': 'sv-SE',
+      'nor': 'no-NO',
+      'dan': 'da-DK',
+      'fin': 'fi-FI'
+    };
+
+    utterance.lang = voiceLanguageMatrix[language] || 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onstart = () => {
+      toast.success(`🔊 Playing in ${LANGUAGES[language] || 'English'}...`);
+    };
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event.error);
+      toast.error(`Speech playback failed: ${event.error}`);
+    };
+
+    utterance.onend = () => {
+      console.log('Speech synthesis finished');
+    };
+
+    try {
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Failed to start speech synthesis:', error);
+      toast.error("Failed to start speech playback");
+    }
+  };
     setCurrentUser(null);
     localStorage.removeItem('comprende-user');
     // Clear any active meetings/streams
