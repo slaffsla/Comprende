@@ -464,6 +464,62 @@ function App() {
       toast.error(`❌ Meeting not found or expired. Meeting ID: ${meetingId}`);
     }
   };
+
+  // Check if user is accessing a meeting via URL
+  useEffect(() => {
+    const path = window.location.pathname;
+    const meetingMatch = path.match(/\/meeting\/(.+)/);
+    
+    if (meetingMatch) {
+      const meetingId = meetingMatch[1];
+      joinMeetingById(meetingId);
+    }
+  }, []);
+
+  const joinMeetingById = async (meetingId) => {
+    try {
+      // Try to fetch meeting from backend
+      const response = await axios.get(`${BACKEND_URL}/api/meetings/${meetingId}`);
+      
+      if (response.data) {
+        const meeting = response.data;
+        
+        // Add user to meeting participants if not already there
+        if (!meeting.participants.includes(currentUser?.name || "Anonymous User")) {
+          meeting.participants.push(currentUser?.name || "Anonymous User");
+          
+          // Update meeting in backend
+          await axios.put(`${BACKEND_URL}/api/meetings/${meetingId}`, {
+            participants: meeting.participants
+          });
+        }
+        
+        // Add meeting to local state if not already there
+        setMeetings(prev => {
+          const existing = prev.find(m => m.id === meetingId);
+          if (!existing) {
+            return [...prev, meeting];
+          }
+          return prev;
+        });
+        
+        // Switch to collaborate tab and auto-join
+        setActiveTab("collaborate");
+        toast.success(`🎥 Joined meeting: ${meeting.name}`);
+        
+        // Auto-initialize WebRTC after a short delay
+        setTimeout(() => {
+          initializeWebRTC(meetingId);
+        }, 1500);
+        
+      }
+    } catch (error) {
+      console.error('Failed to join meeting:', error);
+      toast.error(`❌ Meeting not found or expired. Meeting ID: ${meetingId}`);
+    }
+  };
+
+  const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem('comprende-user');
     // Clear any active meetings/streams
