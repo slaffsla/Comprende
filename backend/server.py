@@ -1613,29 +1613,82 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@api_router.post("/teams")
-async def create_team(request: dict):
-    """Create a new team"""
+@api_router.post("/teams", response_model=Team)
+async def create_team(team_data: TeamCreate, user_id: str = "demo-user"):
+    """Create a new team with enhanced features"""
     try:
-        team_id = str(uuid.uuid4())
-        team = {
-            "id": team_id,
-            "name": request.get("name", "New Team"),
-            "created_by": request.get("created_by", "demo-user"),
-            "members": [request.get("created_by", "demo-user")],
-            "invite_code": str(uuid.uuid4())[:8],
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
+        team = Team(
+            **team_data.dict(),
+            created_by=user_id,
+            members=[user_id]  # Creator automatically becomes a member
+        )
         
-        # Remove any potential ObjectId fields
-        team.pop('_id', None)
+        # Convert to dict and ensure proper serialization
+        team_dict = team.dict()
         
-        await db.teams.insert_one(team)
+        # Ensure datetime serialization
+        if 'created_at' in team_dict:
+            team_dict['created_at'] = team_dict['created_at'].isoformat()
+        
+        # Remove ObjectId fields
+        team_dict.pop('_id', None)
+        
+        await db.teams.insert_one(team_dict)
+        
+        # Log audit event
+        await log_audit_event(user_id, "CREATE", "TEAM", {
+            "team_id": team.id,
+            "team_name": team.name,
+            "invite_code": team.invite_code
+        })
+        
         return team
         
     except Exception as e:
         logger.error(f"Create team error: {e}")
         raise HTTPException(status_code=500, detail="Failed to create team")
+
+@api_router.get("/teams", response_model=List[Team])
+async def get_user_teams(user_id: str = "demo-user"):
+    """Get all teams for a user"""
+    try:
+        teams = await db.teams.find({
+            "$or": [
+                {"created_by": user_id},
+                {"members": {"$in": [user_id]}}
+            ]
+        }).to_list(100)
+        
+        # Clean up ObjectId fields
+        for team in teams:
+            team.pop('_id', None)
+            
+        return [Team(**team) for team in teams]
+        
+    except Exception as e:
+        logger.error(f"Get teams error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get teams")
+
+@api_router.get("/teams/{team_id}", response_model=Team)
+async def get_team(team_id: str, user_id: str = "demo-user"):
+    """Get team details by ID"""
+    try:
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        # Check if user has access to this team
+        if user_id not in team_data.get("members", []) and user_id != team_data.get("created_by"):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        team_data.pop('_id', None)
+        return Team(**team_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get team error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get team")
 
 @api_router.post("/teams/join")
 async def join_team(request: dict):
@@ -1658,9 +1711,31 @@ async def join_team(request: dict):
                 {"invite_code": invite_code},
                 {"$push": {"members": user_id}}
             )
+            
+            # Create notification for team creator
+            notification = Notification(
+                user_id=team_data.get("created_by"),
+                type="team",
+                title="New Team Member",
+                message=f"User {user_id} joined team '{team_data.get('name')}'"
+            )
+            notification_dict = notification.dict()
+            if 'created_at' in notification_dict:
+                notification_dict['created_at'] = notification_dict['created_at'].isoformat()
+            notification_dict.pop('_id', None)
+            await db.notifications.insert_one(notification_dict)
         
         # Return updated team
         updated_team = await db.teams.find_one({"invite_code": invite_code})
+        updated_team.pop('_id', None)
+        
+        # Log audit event
+        await log_audit_event(user_id, "JOIN", "TEAM", {
+            "team_id": updated_team.get("id"),
+            "team_name": updated_team.get("name"),
+            "invite_code": invite_code
+        })
+        
         return updated_team
         
     except HTTPException:
@@ -1668,6 +1743,96 @@ async def join_team(request: dict):
     except Exception as e:
         logger.error(f"Join team error: {e}")
         raise HTTPException(status_code=500, detail="Failed to join team")
+
+@api_router.put("/teams/{team_id}")
+async def update_team(team_id: str, request: dict, user_id: str = "demo-user"):
+    """Update team details"""
+    try:
+        # Check if user is team creator or member
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id != team_data.get("created_by"):
+            raise HTTPException(status_code=403, detail="Only team creator can update team")
+        
+        # Update team
+        update_data = {}
+        if "name" in request:
+            update_data["name"] = request["name"]
+        if "description" in request:
+            update_data["description"] = request["description"]
+        if "settings" in request:
+            update_data["settings"] = request["settings"]
+        
+        await db.teams.update_one(
+            {"id": team_id},
+            {"$set": update_data}
+        )
+        
+        # Return updated team
+        updated_team = await db.teams.find_one({"id": team_id})
+        updated_team.pop('_id', None)
+        
+        # Log audit event
+        await log_audit_event(user_id, "UPDATE", "TEAM", {
+            "team_id": team_id,
+            "updated_fields": list(update_data.keys())
+        })
+        
+        return updated_team
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update team error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update team")
+
+@api_router.delete("/teams/{team_id}/members/{member_id}")
+async def remove_team_member(team_id: str, member_id: str, user_id: str = "demo-user"):
+    """Remove a member from team"""
+    try:
+        # Check if user is team creator
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id != team_data.get("created_by") and user_id != member_id:
+            raise HTTPException(status_code=403, detail="Only team creator or the member themselves can remove member")
+        
+        # Remove member
+        await db.teams.update_one(
+            {"id": team_id},
+            {"$pull": {"members": member_id}}
+        )
+        
+        # Create notification for removed member
+        if user_id != member_id:  # Don't notify if user removed themselves
+            notification = Notification(
+                user_id=member_id,
+                type="team",
+                title="Removed from Team",
+                message=f"You have been removed from team '{team_data.get('name')}'"
+            )
+            notification_dict = notification.dict()
+            if 'created_at' in notification_dict:
+                notification_dict['created_at'] = notification_dict['created_at'].isoformat()
+            notification_dict.pop('_id', None)
+            await db.notifications.insert_one(notification_dict)
+        
+        # Log audit event
+        await log_audit_event(user_id, "REMOVE_MEMBER", "TEAM", {
+            "team_id": team_id,
+            "removed_member": member_id
+        })
+        
+        return {"message": "Member removed successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Remove team member error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to remove team member")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
