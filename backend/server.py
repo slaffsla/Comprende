@@ -917,7 +917,19 @@ async def create_meeting(meeting_data: MeetingCreate, user_id: str = "demo-user"
         status="scheduled"
     )
     
-    await db.meetings.insert_one(meeting.dict())
+    # Convert to dict and ensure proper serialization
+    meeting_dict = meeting.dict()
+    
+    # Ensure all datetime objects are converted to strings for MongoDB
+    if 'created_at' in meeting_dict:
+        meeting_dict['created_at'] = meeting_dict['created_at'].isoformat()
+    if 'scheduled_time' in meeting_dict and meeting_dict['scheduled_time']:
+        meeting_dict['scheduled_time'] = meeting_dict['scheduled_time'].isoformat()
+    
+    # Remove any potential ObjectId fields
+    meeting_dict.pop('_id', None)
+    
+    await db.meetings.insert_one(meeting_dict)
     
     # Create notifications for participants
     for participant_id in meeting.participants:
@@ -927,7 +939,14 @@ async def create_meeting(meeting_data: MeetingCreate, user_id: str = "demo-user"
             title="New Meeting Invitation",
             message=f"You've been invited to '{meeting.name}'"
         )
-        await db.notifications.insert_one(notification.dict())
+        notification_dict = notification.dict()
+        
+        # Ensure datetime serialization for notifications
+        if 'created_at' in notification_dict:
+            notification_dict['created_at'] = notification_dict['created_at'].isoformat()
+        notification_dict.pop('_id', None)
+        
+        await db.notifications.insert_one(notification_dict)
     
     await log_audit_event(user_id, "CREATE", "MEETING", {"meeting_id": meeting.id, "name": meeting.name})
     return meeting
