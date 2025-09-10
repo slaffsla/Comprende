@@ -1215,6 +1215,7 @@ function App() {
   const initializeWebRTC = async (meetingId) => {
     try {
       setIsLoading(true);
+      setCurrentMeetingId(meetingId);
       
       // Check if browser supports getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -1245,6 +1246,21 @@ function App() {
           videoElement.play().catch(e => console.log('Video play failed:', e));
         }
       }, 100);
+      
+      // Initialize WebSocket connection if not already connected
+      if (!websocket) {
+        initializeWebSocket();
+      }
+      
+      // Join the meeting via WebSocket
+      setTimeout(() => {
+        if (websocket && websocket.readyState === WebSocket.OPEN) {
+          websocket.send(JSON.stringify({
+            type: 'join_meeting',
+            meeting_id: meetingId
+          }));
+        }
+      }, 1000);
       
       toast.success("✅ Camera and microphone connected successfully!");
       
@@ -1280,6 +1296,138 @@ function App() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Create peer connection with another user
+  const createPeerConnection = async (remoteUserId, shouldCreateOffer) => {
+    try {
+      const peerConnection = new RTCPeerConnection(rtcConfiguration);
+      
+      // Add local stream to peer connection
+      if (localStream) {
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
+      }
+      
+      // Handle remote stream
+      peerConnection.ontrack = (event) => {
+        console.log('Received remote stream from:', remoteUserId);
+        const [remoteStream] = event.streams;
+        setRemoteStreams(prev => new Map(prev.set(remoteUserId, remoteStream)));
+        
+        // Display remote video
+        setTimeout(() => {
+          const videoElement = document.getElementById(`remote-video-${remoteUserId}`);
+          if (videoElement && remoteStream) {
+            videoElement.srcObject = remoteStream;
+            videoElement.play().catch(e => console.log('Remote video play failed:', e));
+          }
+        }, 100);
+      };
+      
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate && websocket) {
+          websocket.send(JSON.stringify({
+            type: 'webrtc_ice_candidate',
+            target_user: remoteUserId,
+            candidate: event.candidate
+          }));
+        }
+      };
+      
+      // Store peer connection
+      setPeerConnections(prev => new Map(prev.set(remoteUserId, peerConnection)));
+      
+      // Create offer if we're the initiator
+      if (shouldCreateOffer) {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        
+        if (websocket) {
+          websocket.send(JSON.stringify({
+            type: 'webrtc_offer',
+            target_user: remoteUserId,
+            offer: offer
+          }));
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to create peer connection:', error);
+    }
+  };
+
+  // Handle WebRTC offer
+  const handleWebRTCOffer = async (fromUser, offer) => {
+    try {
+      let peerConnection = peerConnections.get(fromUser);
+      if (!peerConnection) {
+        await createPeerConnection(fromUser, false);
+        peerConnection = peerConnections.get(fromUser);
+      }
+      
+      if (peerConnection && offer) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        
+        if (websocket) {
+          websocket.send(JSON.stringify({
+            type: 'webrtc_answer',
+            target_user: fromUser,
+            answer: answer
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to handle WebRTC offer:', error);
+    }
+  };
+
+  // Handle WebRTC answer
+  const handleWebRTCAnswer = async (fromUser, answer) => {
+    try {
+      const peerConnection = peerConnections.get(fromUser);
+      if (peerConnection && answer) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+      }
+    } catch (error) {
+      console.error('Failed to handle WebRTC answer:', error);
+    }
+  };
+
+  // Handle ICE candidate
+  const handleICECandidate = async (fromUser, candidate) => {
+    try {
+      const peerConnection = peerConnections.get(fromUser);
+      if (peerConnection && candidate) {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    } catch (error) {
+      console.error('Failed to handle ICE candidate:', error);
+    }
+  };
+
+  // Close peer connection
+  const closePeerConnection = (userId) => {
+    const peerConnection = peerConnections.get(userId);
+    if (peerConnection) {
+      peerConnection.close();
+      setPeerConnections(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(userId);
+        return newMap;
+      });
+    }
+    
+    // Remove remote stream
+    setRemoteStreams(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(userId);
+      return newMap;
+    });
   };
 
   const joinMeeting = (meetingId) => {
