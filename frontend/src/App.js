@@ -1386,11 +1386,24 @@ function App() {
                                 </p>
                               </div>
                               <div className="flex space-x-2">
-                                <Button size="sm" onClick={() => initializeWebRTC(meeting.id)}>
-                                  <Video className="h-4 w-4 mr-1" />
-                                  Join Video
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => joinMeeting(meeting.id)}
+                                  disabled={isLoading}
+                                >
+                                  {isLoading ? (
+                                    <span className="flex items-center">
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                      Connecting...
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <Video className="h-4 w-4 mr-1" />
+                                      Join Video
+                                    </>
+                                  )}
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" title="Mute/Unmute">
                                   <Mic className="h-4 w-4" />
                                 </Button>
                               </div>
