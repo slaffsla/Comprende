@@ -152,6 +152,7 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self.user_connections: Dict[str, WebSocket] = {}
+        self.meeting_participants: Dict[str, List[str]] = {}  # meeting_id -> [user_ids]
 
     async def connect(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
@@ -163,6 +164,11 @@ class ConnectionManager:
             self.active_connections.remove(websocket)
         if user_id in self.user_connections:
             del self.user_connections[user_id]
+        
+        # Remove user from all meetings
+        for meeting_id, participants in self.meeting_participants.items():
+            if user_id in participants:
+                participants.remove(user_id)
 
     async def send_personal_message(self, message: str, user_id: str):
         if user_id in self.user_connections:
@@ -171,6 +177,25 @@ class ConnectionManager:
     async def broadcast(self, message: str):
         for connection in self.active_connections:
             await connection.send_text(message)
+    
+    async def join_meeting(self, user_id: str, meeting_id: str):
+        """Add user to meeting participants"""
+        if meeting_id not in self.meeting_participants:
+            self.meeting_participants[meeting_id] = []
+        if user_id not in self.meeting_participants[meeting_id]:
+            self.meeting_participants[meeting_id].append(user_id)
+    
+    async def leave_meeting(self, user_id: str, meeting_id: str):
+        """Remove user from meeting participants"""
+        if meeting_id in self.meeting_participants and user_id in self.meeting_participants[meeting_id]:
+            self.meeting_participants[meeting_id].remove(user_id)
+    
+    async def broadcast_to_meeting(self, message: str, meeting_id: str, exclude_user: str = None):
+        """Broadcast message to all participants in a specific meeting"""
+        if meeting_id in self.meeting_participants:
+            for participant_id in self.meeting_participants[meeting_id]:
+                if participant_id != exclude_user and participant_id in self.user_connections:
+                    await self.user_connections[participant_id].send_text(message)
 
 manager = ConnectionManager()
 
