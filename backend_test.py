@@ -395,6 +395,149 @@ class ComprehendeAPITester:
         
         return success
 
+    def test_vladislav_resume_pdf_processing(self):
+        """Test critical PDF processing fix - Vladislav resume with Russian translation"""
+        print("\n🎯 CRITICAL TEST: PDF Processing Fix Verification")
+        print("   Testing actual resume content extraction vs sample text")
+        
+        # Create a temporary PDF file with resume content (simulating PDF upload)
+        resume_content = """Vladislav Zhiltsov
+slasla@gmail.com (+972) 58-410-410-5 Haifa, Israel
+
+EDUCATION
+B.Sc. Mechanical Engineering Technion 2001-2006 Haifa, Israel
+
+SKILLS
+JavaScript, TypeScript, HTML, CSS, React.js, Redux, Firebase, React Native, GIT
+Familiar with: UX, UI, Web Design, Three.js, Tailwind CSS, Node.js
+
+WORK EXPERIENCE
+Frontend Developer - Siema (March 2021 - March 2022)
+Developed visually appealing user interfaces and seamless user experiences using cutting-edge technologies, with special attention to code cleanness and maintainability.
+
+Product Localization Manager - Optima Global (April 2022 - current)
+Ensuring seamless product adaptation for local markets, addressing its needs and regulations. Developing and executing localization strategies, striving to maximize market penetration.
+
+PERSONAL STRENGTHS
+Written and Verbal Communication - excellent language and communication skills (in 3 languages)
+Thinking outside the box
+Attentive to details
+
+PERSONAL INTERESTS
+Brazilian Jiu Jitsu
+Playing musical instruments (Mostly Handpan)"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.pdf', delete=False, encoding='utf-8') as f:
+            f.write(resume_content)
+            temp_file_path = f.name
+        
+        try:
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('vladislav_resume.pdf', f, 'application/pdf')}
+                data = {
+                    'languages': 'eng',
+                    'translate_to': 'rus'  # Russian translation as requested
+                }
+                
+                success, response = self.run_test(
+                    "CRITICAL: Vladislav Resume PDF Processing with Russian Translation",
+                    "POST",
+                    "documents/process",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success:
+                    extracted_text = response.get('extracted_text', '')
+                    translated_text = response.get('translated_text', '')
+                    detected_lang = response.get('detected_language', '')
+                    
+                    print(f"   Detected language: {detected_lang}")
+                    print(f"   Extracted text preview: {extracted_text[:100]}...")
+                    
+                    # CRITICAL VERIFICATION 1: Check for actual resume content, NOT sample text
+                    sample_text_indicators = [
+                        "This is successfully extracted content from PDF document",
+                        "Sample extracted text from PDF document",
+                        "successfully extracted PDF content"
+                    ]
+                    
+                    has_sample_text = any(indicator in extracted_text for indicator in sample_text_indicators)
+                    has_vladislav_name = "Vladislav Zhiltsov" in extracted_text
+                    
+                    if has_sample_text:
+                        print("   ❌ CRITICAL FAILURE: Still returning sample text instead of actual content!")
+                        self.failed_tests.append({
+                            'name': 'PDF Processing Fix - Sample Text Issue',
+                            'expected': 'Actual resume content',
+                            'actual': 'Sample text returned',
+                            'response': f'Found sample text indicators in: {extracted_text[:200]}'
+                        })
+                        return False
+                    elif has_vladislav_name:
+                        print("   ✅ CRITICAL SUCCESS: Actual resume content extracted (contains 'Vladislav Zhiltsov')")
+                    else:
+                        print("   ⚠️  WARNING: No sample text found, but 'Vladislav Zhiltsov' not detected either")
+                        print(f"   Full extracted text: {extracted_text}")
+                    
+                    # CRITICAL VERIFICATION 2: Check Russian translation quality
+                    if translated_text:
+                        print(f"   Russian translation preview: {translated_text[:100]}...")
+                        
+                        # Check for proper Cyrillic characters
+                        cyrillic_chars = sum(1 for char in translated_text if '\u0400' <= char <= '\u04ff')
+                        cyrillic_percentage = (cyrillic_chars / len(translated_text)) * 100 if translated_text else 0
+                        
+                        print(f"   Cyrillic characters: {cyrillic_percentage:.1f}% of text")
+                        
+                        # Check for key Russian terms
+                        russian_name_variants = ["Владислав Жильцов", "Владислав", "Жильцов"]
+                        has_russian_name = any(name in translated_text for name in russian_name_variants)
+                        
+                        if has_russian_name:
+                            print("   ✅ Russian translation contains proper name translation")
+                        else:
+                            print("   ⚠️  Russian translation may not contain proper name translation")
+                        
+                        # Check for broken Russian patterns
+                        broken_patterns = ["успешно извлеченное", "успешно извлеченный"]
+                        has_broken_russian = any(pattern in translated_text for pattern in broken_patterns)
+                        
+                        if has_broken_russian:
+                            print("   ❌ WARNING: Detected broken Russian translation patterns")
+                        else:
+                            print("   ✅ No broken Russian patterns detected")
+                        
+                        if cyrillic_percentage > 30 and not has_broken_russian:
+                            print("   ✅ CRITICAL SUCCESS: High-quality Russian translation confirmed")
+                        else:
+                            print("   ⚠️  Russian translation quality needs verification")
+                    else:
+                        print("   ❌ No Russian translation provided")
+                        self.failed_tests.append({
+                            'name': 'Russian Translation Missing',
+                            'expected': 'Russian translation of resume',
+                            'actual': 'No translation provided',
+                            'response': 'translate_to=rus but no translated_text in response'
+                        })
+                    
+                    # CRITICAL VERIFICATION 3: Frontend integration simulation
+                    print("   🔄 Simulating frontend integration...")
+                    if has_vladislav_name and not has_sample_text:
+                        print("   ✅ FRONTEND INTEGRATION: Will receive actual resume content")
+                    else:
+                        print("   ❌ FRONTEND INTEGRATION: Will still receive incorrect content")
+                        return False
+                
+                return success
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
+
     def test_invalid_translation(self):
         """Test translation with invalid data"""
         translation_data = {
