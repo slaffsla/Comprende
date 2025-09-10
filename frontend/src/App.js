@@ -533,40 +533,47 @@ function App() {
 
   const copyToClipboard = async (text) => {
     try {
-      // Try modern Clipboard API first
-      if (navigator.clipboard && navigator.clipboard.writeText) {
+      // Check if we have clipboard API support
+      if (navigator.clipboard && window.isSecureContext) {
+        // Try to use the modern Clipboard API
         await navigator.clipboard.writeText(text);
-        toast.success("Copied to clipboard");
+        toast.success("Copied to clipboard!");
       } else {
-        // Fallback for older browsers or restricted environments
-        const textArea = document.createElement('textarea');
+        // Fallback method for older browsers or non-secure contexts
+        const textArea = document.createElement("textarea");
         textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
         
         try {
-          document.execCommand('copy');
-          toast.success("Copied to clipboard");
+          const successful = document.execCommand('copy');
+          if (successful) {
+            toast.success("Copied to clipboard!");
+          } else {
+            throw new Error('Copy command failed');
+          }
         } catch (err) {
-          console.error('Fallback copy failed:', err);
-          toast.error("Copy not supported in this environment");
+          // If all else fails, show the text to copy manually
+          toast.error(`Copy failed. Please copy manually: ${text.substring(0, 50)}...`);
         }
         
         document.body.removeChild(textArea);
       }
     } catch (error) {
-      console.error('Copy failed:', error);
-      // Create a temporary input for manual copy
-      const input = document.createElement('input');
-      input.value = text;
-      document.body.appendChild(input);
-      input.select();
-      toast.info("Text selected - press Ctrl+C (Cmd+C on Mac) to copy");
-      setTimeout(() => document.body.removeChild(input), 5000);
+      console.error('Clipboard operation failed:', error);
+      
+      // For Brave and other privacy-focused browsers
+      if (error.name === 'NotAllowedError') {
+        toast.error("📋 Clipboard access denied. Please allow clipboard permissions in browser settings.");
+      } else {
+        // Show a manual copy dialog
+        const shortText = text.length > 100 ? text.substring(0, 100) + '...' : text;
+        toast.error(`Copy failed. Text: ${shortText}`);
+      }
     }
   };
 
