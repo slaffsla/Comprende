@@ -510,53 +510,7 @@ function App() {
     }
   };
 
-  const [teams, setTeams] = useState([]);
-  const [currentTeam, setCurrentTeam] = useState(null);
 
-  const createTeam = async (teamName) => {
-    try {
-      const response = await axios.post(`${BACKEND_URL}/api/teams`, {
-        name: teamName,
-        created_by: currentUser?.id || "demo-user"
-      });
-      
-      if (response.data) {
-        setTeams(prev => [...prev, response.data]);
-        setCurrentTeam(response.data);
-        toast.success(`🏢 Team "${teamName}" created! Invite code: ${response.data.invite_code}`);
-        
-        // Copy invite code to clipboard
-        await copyToClipboard(response.data.invite_code);
-      }
-    } catch (error) {
-      console.error('Failed to create team:', error);
-      toast.error("Failed to create team");
-    }
-  };
-
-  const joinTeam = async (inviteCode) => {
-    try {
-      const response = await axios.post(`${BACKEND_URL}/api/teams/join`, {
-        invite_code: inviteCode,
-        user_id: currentUser?.id || "demo-user"
-      });
-      
-      if (response.data) {
-        setTeams(prev => {
-          const existing = prev.find(t => t.id === response.data.id);
-          if (!existing) {
-            return [...prev, response.data];
-          }
-          return prev;
-        });
-        setCurrentTeam(response.data);
-        toast.success(`🎉 Joined team: ${response.data.name}`);
-      }
-    } catch (error) {
-      console.error('Failed to join team:', error);
-      toast.error("Invalid invite code or team not found");
-    }
-  };
     // Set up mock team members and notifications
     setUsers([
       { id: "user-1", name: "Demo User", status: "online", avatar: "👤" },
