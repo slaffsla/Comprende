@@ -383,7 +383,7 @@ class WebRTCWebSocketTester:
             # Connect all participants
             for participant in participants:
                 ws_endpoint = f"{self.ws_url}/ws/{participant}"
-                ws = await websockets.connect(ws_endpoint, timeout=10)
+                ws = await asyncio.wait_for(websockets.connect(ws_endpoint), timeout=10)
                 websockets_list.append((participant, ws))
             
             self.log_test_result(
