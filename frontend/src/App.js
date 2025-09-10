@@ -1446,13 +1446,7 @@ function App() {
                                   <Button 
                                     variant="destructive" 
                                     size="sm"
-                                    onClick={() => {
-                                      if (localStream) {
-                                        localStream.getTracks().forEach(track => track.stop());
-                                        setLocalStream(null);
-                                      }
-                                      toast.success("Left the meeting");
-                                    }}
+                                    onClick={leaveMeeting}
                                   >
                                     <PhoneOff className="h-4 w-4 mr-1" />
                                     Leave
