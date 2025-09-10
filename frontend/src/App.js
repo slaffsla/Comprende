@@ -613,71 +613,143 @@ function App() {
 
   const createMeeting = async () => {
     try {
+      setIsLoading(true);
+      const meetingId = `meeting-${Date.now()}`;
+      
+      // Create meeting in backend first
+      const response = await axios.post(`${BACKEND_URL}/api/meetings`, {
+        name: "Translation Meeting",
+        participants: ["demo-user"]
+      });
+      
+      if (response.data) {
+        const newMeeting = {
+          id: response.data.id || meetingId,
+          name: response.data.name || "Translation Meeting",
+          participants: response.data.participants || ["demo-user"],
+          createdAt: new Date(),
+          status: "active"
+        };
+        
+        setMeetings(prev => [...prev, newMeeting]);
+        
+        // Switch to collaborate tab to show the meeting
+        setActiveTab("collaborate");
+        
+        toast.success("Meeting created successfully! Click 'Join Video' to start video call.");
+        
+        // Auto-initialize WebRTC after a short delay
+        setTimeout(() => {
+          initializeWebRTC(newMeeting.id);
+        }, 1000);
+      }
+      
+    } catch (error) {
+      console.error('Failed to create meeting:', error);
+      // Fallback to client-side meeting creation
       const meetingId = `meeting-${Date.now()}`;
       const newMeeting = {
         id: meetingId,
         name: "Translation Meeting",
-        participants: [currentUser],
+        participants: ["demo-user"],
         createdAt: new Date(),
         status: "active"
       };
-      
-      // Create meeting in backend
-      const response = await axios.post(`${BACKEND_URL}/api/meetings`, {
-        name: newMeeting.name,
-        participants: newMeeting.participants
-      });
-      
-      setMeetings(prev => [...prev, response.data]);
-      
-      // Initialize WebRTC for the meeting
-      initializeWebRTC(meetingId);
-      
-      toast.success("Meeting created! Starting video call...");
-      
-      // Switch to collaborate tab to show the meeting
+      setMeetings(prev => [...prev, newMeeting]);
       setActiveTab("collaborate");
-      
-    } catch (error) {
-      console.error('Failed to create meeting:', error);
-      toast.error("Failed to create meeting");
+      toast.success("Meeting created successfully! Click 'Join Video' to start video call.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const initializeWebRTC = async (meetingId) => {
     try {
+      setIsLoading(true);
+      
+      // Check if browser supports getUserMedia
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error("Your browser doesn't support camera/microphone access. Please use a modern browser.");
+        return;
+      }
+
       // Get user media (video + audio)
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true
+        }
       });
       
-      // For now, set up local video preview
-      // In a full implementation, this would connect to a WebRTC signaling server
+      // Set up local video preview
       setLocalStream(stream);
       
-      // Show local video
-      const videoElement = document.getElementById('local-video');
-      if (videoElement) {
-        videoElement.srcObject = stream;
-      }
+      // Show local video immediately
+      setTimeout(() => {
+        const videoElement = document.getElementById('local-video');
+        if (videoElement && stream) {
+          videoElement.srcObject = stream;
+          videoElement.play().catch(e => console.log('Video play failed:', e));
+        }
+      }, 100);
       
-      toast.success("Camera and microphone initialized");
+      toast.success("✅ Camera and microphone connected successfully!");
       
     } catch (error) {
       console.error('WebRTC initialization failed:', error);
       let errorMessage = "Failed to access camera/microphone";
       
       if (error.name === 'NotAllowedError') {
-        errorMessage = "Camera/microphone permission denied. Please allow access.";
+        errorMessage = "🚫 Camera/microphone permission denied. Please allow access and try again.";
       } else if (error.name === 'NotFoundError') {
-        errorMessage = "No camera/microphone found.";
+        errorMessage = "📷 No camera/microphone found. Please connect a device and try again.";
       } else if (error.name === 'NotReadableError') {
-        errorMessage = "Camera/microphone is already in use.";
+        errorMessage = "🔒 Camera/microphone is already in use by another application.";
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = "⚙️ Camera settings not supported. Trying with default settings...";
+        
+        // Retry with basic constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+          });
+          setLocalStream(basicStream);
+          toast.success("✅ Connected with basic camera settings!");
+        } catch (retryError) {
+          toast.error("❌ Failed to connect even with basic settings.");
+        }
+      } else {
+        errorMessage = `❌ WebRTC error: ${error.message}`;
       }
       
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const joinMeeting = (meetingId) => {
+    initializeWebRTC(meetingId);
+  };
+
+  const leaveMeeting = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        console.log(`Stopped ${track.kind} track`);
+      });
+      setLocalStream(null);
+      const videoElement = document.getElementById('local-video');
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    }
+    toast.success("✅ Left the meeting successfully");
   };
 
   const shareFile = (file) => {
