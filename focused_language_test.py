@@ -7,7 +7,7 @@ import json
 
 def test_specific_language_detection():
     """Test the exact text samples from the review request"""
-    base_url = "https://translatify-8.preview.emergentagent.com/api"
+    base_url = "https://translate-hub-22.preview.emergentagent.com/api"
     
     # Test cases from the review request
     test_cases = [

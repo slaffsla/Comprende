@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 class CriticalFixesTester:
-    def __init__(self, base_url="https://translatify-8.preview.emergentagent.com"):
+    def __init__(self, base_url="https://translate-hub-22.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

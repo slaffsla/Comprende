@@ -12,7 +12,7 @@ from pathlib import Path
 
 class FocusedAPITester:
     def __init__(self):
-        self.base_url = "https://translatify-8.preview.emergentagent.com"
+        self.base_url = "https://translate-hub-22.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.results = {
             'passed': [],

@@ -13,7 +13,7 @@ def test_german_detection():
     print("=" * 60)
     
     # Test with auto-detection
-    url = "https://translatify-8.preview.emergentagent.com/api/translate"
+    url = "https://translate-hub-22.preview.emergentagent.com/api/translate"
     
     data = {
         "text": german_text,
@@ -71,7 +71,7 @@ def test_multiple_german_texts():
     print("\n🔄 TESTING MULTIPLE GERMAN TEXTS")
     print("=" * 60)
     
-    url = "https://translatify-8.preview.emergentagent.com/api/translate"
+    url = "https://translate-hub-22.preview.emergentagent.com/api/translate"
     all_passed = True
     
     for i, text in enumerate(german_texts, 1):
