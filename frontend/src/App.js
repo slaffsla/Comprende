@@ -357,6 +357,8 @@ function App() {
       toast.error("Failed to start speech playback");
     }
   };
+
+  const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem('comprende-user');
     // Clear any active meetings/streams
