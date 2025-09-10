@@ -560,46 +560,7 @@ function App() {
     }
   };
 
-  const speakText = (text, lang) => {
-    if ('speechSynthesis' in window) {
-      // Stop any ongoing speech
-      speechSynthesis.cancel();
-      
-      const utterance = new SpeechSynthesisUtterance(text);
-      
-      // Map language codes to speech synthesis languages
-      const langMap = {
-        'heb': 'he-IL',
-        'ara': 'ar-SA',
-        'spa': 'es-ES',
-        'fra': 'fr-FR',
-        'deu': 'de-DE',
-        'ita': 'it-IT',
-        'por': 'pt-PT',
-        'rus': 'ru-RU',
-        'chi': 'zh-CN',
-        'jpn': 'ja-JP',
-        'kor': 'ko-KR',
-        'hin': 'hi-IN',
-        'tur': 'tr-TR'
-      };
-      
-      utterance.lang = langMap[lang] || 'en-US';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        toast.error("Speech synthesis failed");
-      };
-      
-      speechSynthesis.speak(utterance);
-    } else {
-      toast.error("Speech synthesis not supported");
-    }
-  };
+
 
   // Voice input handling
   const toggleVoiceInput = () => {
