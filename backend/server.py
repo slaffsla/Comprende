@@ -1420,6 +1420,97 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@api_router.get("/meetings/{meeting_id}")
+async def get_meeting(meeting_id: str):
+    """Get meeting details by ID"""
+    try:
+        meeting_data = await db.meetings.find_one({"id": meeting_id})
+        if not meeting_data:
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        
+        return meeting_data
+    except Exception as e:
+        logger.error(f"Get meeting error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get meeting")
+
+@api_router.put("/meetings/{meeting_id}")
+async def update_meeting(meeting_id: str, request: dict):
+    """Update meeting participants"""
+    try:
+        result = await db.meetings.update_one(
+            {"id": meeting_id},
+            {"$set": request}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Meeting not found")
+        
+        # Return updated meeting
+        updated_meeting = await db.meetings.find_one({"id": meeting_id})
+        return updated_meeting
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update meeting error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update meeting")
+
+@api_router.post("/teams")
+async def create_team(request: dict):
+    """Create a new team"""
+    try:
+        team_id = str(uuid.uuid4())
+        team = {
+            "id": team_id,
+            "name": request.get("name", "New Team"),
+            "created_by": request.get("created_by", "demo-user"),
+            "members": [request.get("created_by", "demo-user")],
+            "invite_code": str(uuid.uuid4())[:8],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Remove any potential ObjectId fields
+        team.pop('_id', None)
+        
+        await db.teams.insert_one(team)
+        return team
+        
+    except Exception as e:
+        logger.error(f"Create team error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create team")
+
+@api_router.post("/teams/join")
+async def join_team(request: dict):
+    """Join a team using invite code"""
+    try:
+        invite_code = request.get("invite_code")
+        user_id = request.get("user_id", "demo-user")
+        
+        if not invite_code:
+            raise HTTPException(status_code=400, detail="Invite code required")
+        
+        # Find team by invite code
+        team_data = await db.teams.find_one({"invite_code": invite_code})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Invalid invite code")
+        
+        # Add user to team if not already a member
+        if user_id not in team_data.get("members", []):
+            await db.teams.update_one(
+                {"invite_code": invite_code},
+                {"$push": {"members": user_id}}
+            )
+        
+        # Return updated team
+        updated_team = await db.teams.find_one({"invite_code": invite_code})
+        return updated_team
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Join team error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join team")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
