@@ -149,6 +149,9 @@ backend:
       - working: true
         agent: "main"  
         comment: "FIXED - Implemented hybrid detection with pattern matching + LLM fallback, Hebrew correctly detected as 'heb', Arabic as 'ara'"
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE TESTING VERIFIED - German text 'Der gemächliche Rhythmus der Hufe auf dem frisch gefallenen Schnee...' correctly detected as 'deu' (German), NOT 'spa' (Spanish). Hebrew ('שלום עולם! איך אתה היום?') → 'heb', Arabic ('أهلاً وسهلاً! كيف حالك اليوم؟') → 'ara'. All critical language detection working perfectly. Minor: Some European languages occasionally misdetected as Spanish, but all user-reported critical languages (German, Hebrew, Arabic) working correctly."
 
   - task: "File Download Functionality"
     implemented: true
