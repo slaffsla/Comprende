@@ -1481,46 +1481,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@api_router.get("/meetings/{meeting_id}")
-async def get_meeting(meeting_id: str):
-    """Get meeting details by ID"""
-    try:
-        meeting_data = await db.meetings.find_one({"id": meeting_id})
-        if not meeting_data:
-            raise HTTPException(status_code=404, detail="Meeting not found or expired")
-        
-        # Clean up ObjectId for JSON serialization
-        meeting_data.pop('_id', None)
-        
-        return meeting_data
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Get meeting error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get meeting")
-
-@api_router.put("/meetings/{meeting_id}")
-async def update_meeting(meeting_id: str, request: dict):
-    """Update meeting participants"""
-    try:
-        result = await db.meetings.update_one(
-            {"id": meeting_id},
-            {"$set": request}
-        )
-        
-        if result.matched_count == 0:
-            raise HTTPException(status_code=404, detail="Meeting not found")
-        
-        # Return updated meeting
-        updated_meeting = await db.meetings.find_one({"id": meeting_id})
-        return updated_meeting
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Update meeting error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to update meeting")
-
 @api_router.post("/teams")
 async def create_team(request: dict):
     """Create a new team"""
