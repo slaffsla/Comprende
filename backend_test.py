@@ -962,6 +962,17 @@ def main():
     print("-" * 50)
     tester.test_vladislav_resume_pdf_processing()
     
+    # MEETING FUNCTIONALITY TESTS (CRITICAL)
+    print("\n🤝 MEETING FUNCTIONALITY TESTS (CRITICAL)")
+    print("-" * 50)
+    tester.test_meeting_creation()
+    tester.test_meeting_retrieval()
+    tester.test_meeting_update()
+    tester.test_meeting_list()
+    tester.test_meeting_not_found()
+    tester.test_meeting_update_not_found()
+    tester.test_meeting_storage_verification()
+    
     # File Download Tests
     print("\n📥 FILE DOWNLOAD TESTS")
     print("-" * 30)
