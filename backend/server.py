@@ -375,17 +375,23 @@ class TranslationService:
         
         # Find the language with highest word count
         language_scores = {
+            'deu': german_count,
             'eng': english_count,
             'spa': spanish_count,
             'fra': french_count,
-            'deu': german_count,
             'ita': italian_count,  
             'por': portuguese_count
         }
         
         # Return language with highest score if above threshold
         max_lang = max(language_scores, key=language_scores.get)
-        if language_scores[max_lang] >= 2 or (language_scores[max_lang] >= 1 and len(text.split()) <= 10):
+        max_score = language_scores[max_lang]
+        
+        # Require higher threshold for accurate detection
+        text_word_count = len(text.split())
+        min_threshold = max(3, text_word_count // 10)  # At least 3 words or 10% of text
+        
+        if max_score >= min_threshold:
             return max_lang
             
         # Default to English
