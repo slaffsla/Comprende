@@ -1369,16 +1369,35 @@ async def share_file(
         raise HTTPException(status_code=500, detail="File sharing failed")
 
 @api_router.get("/files/shared")
-async def get_shared_files(user_id: str = "demo-user"):
-    """Get files shared with user"""
-    shared_files = await db.shared_files.find({
-        "$or": [
-            {"shared_by": user_id},
-            {"shared_with": {"$in": [user_id]}}
-        ]
-    }).to_list(100)
-    
-    return [SharedFile(**file) for file in shared_files]
+async def get_shared_files(user_id: str = "demo-user", team_id: str = None):
+    """Get files shared with user, optionally filtered by team"""
+    try:
+        query = {
+            "$or": [
+                {"shared_by": user_id},
+                {"shared_with": {"$in": [user_id]}}
+            ]
+        }
+        
+        # Add team filter if specified
+        if team_id:
+            query["team_id"] = team_id
+        
+        shared_files = await db.shared_files.find(query).to_list(100)
+        
+        # Clean up ObjectId fields
+        for file_doc in shared_files:
+            file_doc.pop('_id', None)
+        
+        return {
+            "files": [SharedFile(**file_doc) for file_doc in shared_files],
+            "total_files": len(shared_files),
+            "team_filter": team_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Get shared files error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get shared files")
 
 @api_router.post("/documents/download")
 async def download_document_content(request: dict):
