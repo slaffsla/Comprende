@@ -1069,29 +1069,156 @@ async def download_document_content(request: dict):
         logger.error(f"Document download error: {e}")
         raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
-@api_router.get("/files/download/{file_id}")
-async def download_shared_file(file_id: str, user_id: str = "demo-user"):
-    """Download a shared file"""
-    shared_file_data = await db.shared_files.find_one({"id": file_id})
-    if not shared_file_data:
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    shared_file = SharedFile(**shared_file_data)
-    
-    # Check permissions
-    if user_id not in shared_file.shared_with and shared_file.shared_by != user_id:
-        raise HTTPException(status_code=403, detail="Access denied")
-    
-    if not Path(shared_file.file_path).exists():
-        raise HTTPException(status_code=404, detail="File not found on disk")
-    
-    await log_audit_event(user_id, "DOWNLOAD", "FILE", {"file_id": file_id, "filename": shared_file.original_name})
-    
-    return FileResponse(
-        path=shared_file.file_path,
-        filename=shared_file.original_name,
-        media_type='application/octet-stream'
-    )
+@api_router.post("/documents/download-formatted")
+async def download_document_formatted(request: dict):
+    """Download document content in original format (PDF, XLS, etc.)"""
+    try:
+        content = request.get('content', '')
+        filename = request.get('filename', 'document.txt')
+        original_format = request.get('format', 'txt').lower()
+        
+        if not content:
+            raise HTTPException(status_code=400, detail="No content provided for download")
+        
+        # Create a temporary file with proper format
+        temp_dir = Path("/tmp/comprende_downloads")
+        temp_dir.mkdir(exist_ok=True, parents=True)
+        
+        file_id = str(uuid.uuid4())
+        
+        # Handle different formats
+        if original_format in ['pdf']:
+            # For PDF, we'll create a simple PDF with the translated content
+            try:
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.pagesizes import letter
+                from reportlab.pdfbase import pdfmetrics
+                from reportlab.pdfbase.ttfonts import TTFont
+                import textwrap
+                
+                temp_file_path = temp_dir / f"{file_id}_{filename}"
+                
+                # Create PDF
+                c = canvas.Canvas(str(temp_file_path), pagesize=letter)
+                width, height = letter
+                
+                # Try to use a font that supports multiple languages
+                try:
+                    # You might need to add font files for better Unicode support
+                    c.setFont("Helvetica", 12)
+                except:
+                    c.setFont("Helvetica", 12)
+                
+                # Add content to PDF with proper line wrapping
+                lines = content.split('\n')
+                y_position = height - 50
+                
+                for line in lines:
+                    if y_position < 50:  # Start new page if needed
+                        c.showPage()
+                        y_position = height - 50
+                    
+                    # Wrap long lines
+                    wrapped_lines = textwrap.wrap(line, width=80)
+                    if not wrapped_lines:
+                        wrapped_lines = ['']  # Empty line
+                    
+                    for wrapped_line in wrapped_lines:
+                        if y_position < 50:
+                            c.showPage() 
+                            y_position = height - 50
+                        
+                        try:
+                            c.drawString(50, y_position, wrapped_line)
+                        except:
+                            # Handle Unicode issues by encoding
+                            safe_text = wrapped_line.encode('ascii', 'ignore').decode('ascii')
+                            c.drawString(50, y_position, safe_text)
+                        
+                        y_position -= 15
+                
+                c.save()
+                
+                media_type = 'application/pdf'
+                
+            except ImportError:
+                # Fallback: create as text file if reportlab not available
+                temp_file_path = temp_dir / f"{file_id}_{filename.replace('.pdf', '.txt')}"
+                async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
+                    await f.write(content)
+                media_type = 'text/plain; charset=utf-8'
+                
+        elif original_format in ['xls', 'xlsx']:
+            # For Excel files, create a simple Excel with the translated content
+            try:
+                import openpyxl
+                from openpyxl import Workbook
+                
+                # Create Excel file
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Translated Content"
+                
+                # Split content into lines and add to Excel
+                lines = content.split('\n')
+                for i, line in enumerate(lines, 1):
+                    ws[f'A{i}'] = line
+                
+                temp_file_path = temp_dir / f"{file_id}_{filename}"
+                wb.save(str(temp_file_path))
+                
+                media_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                
+            except ImportError:
+                # Fallback: create as text file if openpyxl not available
+                temp_file_path = temp_dir / f"{file_id}_{filename.replace('.xlsx', '.txt').replace('.xls', '.txt')}"
+                async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
+                    await f.write(content)
+                media_type = 'text/plain; charset=utf-8'
+                
+        else:
+            # Default: create as text file
+            temp_file_path = temp_dir / f"{file_id}_{filename}"
+            async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
+                await f.write(content)
+            media_type = 'text/plain; charset=utf-8'
+        
+        # Verify file was created
+        if not temp_file_path.exists():
+            raise HTTPException(status_code=500, detail="Failed to create formatted download file")
+        
+        # Schedule cleanup after response
+        def cleanup_file():
+            try:
+                if temp_file_path.exists():
+                    temp_file_path.unlink()
+            except Exception as e:
+                logger.warning(f"Failed to cleanup temp file: {e}")
+        
+        # Return file response with proper headers
+        response = FileResponse(
+            path=str(temp_file_path),
+            filename=filename,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f"attachment; filename=\"{filename}\"",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+        
+        # Schedule cleanup for after the file is sent
+        import threading
+        threading.Timer(5.0, cleanup_file).start()
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Formatted document download error: {e}")
+        raise HTTPException(status_code=500, detail=f"Formatted download failed: {str(e)}")
 
 @api_router.get("/notifications")
 async def get_notifications(user_id: str = "demo-user", limit: int = 50):
