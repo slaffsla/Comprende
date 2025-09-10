@@ -189,6 +189,18 @@ backend:
         agent: "testing"
         comment: "COMPREHENSIVE TESTING VERIFIED - Translation service working excellently. German text translated with 95% confidence, comprehensive translations maintaining all key words. System health check shows translation_service as 'healthy'. Fast response times (0.05s for health, ~1.1s for translations). All language pairs tested working correctly."
 
+  - task: "Translation History and Audit Logs"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 1
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Minor issue found during testing - /api/translations/history and /api/audit/logs endpoints return 500 Internal Server Error due to MongoDB ObjectId serialization issues. Error: 'ObjectId' object is not iterable. This is a non-critical issue as core translation functionality works perfectly, but these endpoints need ObjectId handling fixes."
+
 frontend:
   - task: "Voice Recognition Implementation"
     implemented: true
