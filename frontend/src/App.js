@@ -731,43 +731,86 @@ function App() {
 
   const downloadFile = async (content, filename, type = 'text/plain') => {
     try {
-      // Use backend download endpoint for better reliability
-      const response = await axios.post(`${BACKEND_URL}/api/documents/download`, {
-        content: content,
-        filename: filename
-      }, {
-        responseType: 'blob'
-      });
-
-      // Create download link
-      const blob = new Blob([response.data], { type });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      toast.success("File downloaded successfully");
-    } catch (error) {
-      console.error('Download failed:', error);
-      // Fallback to client-side download
+      // First try using the backend download endpoint for better reliability
       try {
-        const blob = new Blob([content], { type });
+        const response = await axios.post(`${BACKEND_URL}/api/documents/download`, {
+          content: content,
+          filename: filename
+        }, {
+          responseType: 'blob'
+        });
+
+        // Create download link from blob response
+        const blob = new Blob([response.data], { type: type });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = filename;
+        
+        // For better Brave browser compatibility
+        link.style.display = 'none';
         document.body.appendChild(link);
+        
+        // Trigger download
         link.click();
+        
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        toast.success(`📁 File "${filename}" downloaded successfully!`);
+        return;
+        
+      } catch (backendError) {
+        console.warn('Backend download failed, trying client-side:', backendError);
+      }
+      
+      // Fallback to client-side download
+      const blob = new Blob([content], { type: type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // Better browser compatibility
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // For Brave and strict browsers - request permission first
+      if (navigator.permissions) {
+        try {
+          const permission = await navigator.permissions.query({name: 'downloads'});
+          if (permission.state === 'denied') {
+            toast.error("📥 Download permission denied. Please allow downloads in browser settings.");
+            return;
+          }
+        } catch (permError) {
+          // Permissions API not supported, continue with download
+          console.log('Download permissions check not supported:', permError);
+        }
+      }
+      
+      // Trigger download
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        toast.success("File downloaded successfully");
-      } catch (fallbackError) {
-        console.error('Fallback download failed:', fallbackError);
-        toast.error("Download failed");
+      }, 100);
+      
+      // Verify download by checking if the blob was created successfully
+      if (blob.size > 0) {
+        toast.success(`📁 File "${filename}" download initiated. Check your Downloads folder.`);
+      } else {
+        toast.error("❌ Download failed - empty file content");
       }
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error(`❌ Download failed: ${error.message}`);
     }
   };
 
