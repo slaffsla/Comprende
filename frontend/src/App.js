@@ -1109,7 +1109,84 @@ function App() {
     }
   };
 
-  const joinTeam = async (inviteCode) => {
+  // Initialize WebSocket connection
+  const initializeWebSocket = () => {
+    if (websocket) {
+      websocket.close();
+    }
+
+    const userId = currentUser?.id || `user-${Date.now()}`;
+    const wsUrl = BACKEND_URL.replace('http', 'ws') + `/ws/${userId}`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setWebsocket(ws);
+    };
+
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      await handleWebSocketMessage(data);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWebsocket(null);
+      // Attempt to reconnect after 3 seconds
+      setTimeout(() => {
+        if (currentUser) {
+          initializeWebSocket();
+        }
+      }, 3000);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  };
+
+  // Handle incoming WebSocket messages
+  const handleWebSocketMessage = async (data) => {
+    switch (data.type) {
+      case 'user_joined':
+        console.log('User joined:', data.user_id);
+        setConnectedUsers(prev => [...prev.filter(u => u !== data.user_id), data.user_id]);
+        // Initiate WebRTC connection with the new user
+        await createPeerConnection(data.user_id, true);
+        break;
+
+      case 'user_left':
+        console.log('User left:', data.user_id);
+        setConnectedUsers(prev => prev.filter(u => u !== data.user_id));
+        // Clean up peer connection
+        closePeerConnection(data.user_id);
+        break;
+
+      case 'existing_participants':
+        console.log('Existing participants:', data.participants);
+        setConnectedUsers(data.participants);
+        // Create peer connections with existing users
+        for (const participantId of data.participants) {
+          await createPeerConnection(participantId, false);
+        }
+        break;
+
+      case 'webrtc_offer':
+        await handleWebRTCOffer(data.from_user, data.offer);
+        break;
+
+      case 'webrtc_answer':
+        await handleWebRTCAnswer(data.from_user, data.answer);
+        break;
+
+      case 'webrtc_ice_candidate':
+        await handleICECandidate(data.from_user, data.candidate);
+        break;
+
+      default:
+        console.log('Unknown message type:', data.type);
+    }
+  };
     try {
       const response = await axios.post(`${BACKEND_URL}/api/teams/join`, {
         invite_code: inviteCode,
