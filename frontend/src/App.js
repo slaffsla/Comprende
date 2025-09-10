@@ -1377,11 +1377,14 @@ function App() {
                       <div>
                         <label className="text-sm font-medium mb-2 block">From</label>
                         <Select value={sourceLang} onValueChange={setSourceLang}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Source Language" />
+                          <SelectTrigger className="bg-white border-gray-300 text-gray-900 shadow-sm hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            <SelectValue placeholder="Source Language" className="text-gray-900" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-60 overflow-y-auto bg-white border-gray-200 shadow-lg">
-                            <SelectItem value="auto" className="font-medium text-gray-900 hover:bg-blue-50 hover:text-blue-700">
+                          <SelectContent className="max-h-60 overflow-y-auto bg-white border-gray-300 shadow-xl z-50">
+                            <SelectItem 
+                              value="auto" 
+                              className="font-medium text-gray-900 hover:bg-blue-100 hover:text-blue-800 focus:bg-blue-200 focus:text-blue-900 cursor-pointer py-2"
+                            >
                               Auto-detect
                             </SelectItem>
                             {Object.entries(LANGUAGES)
@@ -1390,7 +1393,7 @@ function App() {
                               <SelectItem 
                                 key={code} 
                                 value={code}
-                                className="text-gray-900 hover:bg-blue-50 hover:text-blue-700 focus:bg-blue-100 focus:text-blue-800"
+                                className="text-gray-900 hover:bg-blue-100 hover:text-blue-800 focus:bg-blue-200 focus:text-blue-900 cursor-pointer py-2"
                               >
                                 {name}
                               </SelectItem>
