@@ -2102,6 +2102,9 @@ async def remove_team_member(team_id: str, member_id: str, user_id: str = "demo-
         logger.error(f"Remove team member error: {e}")
         raise HTTPException(status_code=500, detail="Failed to remove team member")
 
+# Include the router in the main app (after all endpoints are defined)
+app.include_router(api_router)
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
