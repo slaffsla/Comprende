@@ -1771,7 +1771,7 @@ function App() {
                           <h4 className="font-medium mb-2 flex items-center space-x-2">
                             <span>Translated Text:</span>
                             <Badge variant="outline" className="text-xs bg-blue-50">
-                              {LANGUAGES[documentResult.detected_language]} → English
+                              {LANGUAGES[documentResult.detected_language]} → {LANGUAGES[targetLang]}
                             </Badge>
                           </h4>
                           <div className="p-3 bg-blue-50 rounded border max-h-40 overflow-y-auto">
