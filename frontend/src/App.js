@@ -739,17 +739,29 @@ function App() {
 
   const leaveMeeting = () => {
     if (localStream) {
+      // Stop all tracks (video and audio)
       localStream.getTracks().forEach(track => {
         track.stop();
-        console.log(`Stopped ${track.kind} track`);
+        console.log(`Stopped ${track.kind} track - readyState: ${track.readyState}`);
       });
+      
+      // Clear the stream reference
       setLocalStream(null);
+      
+      // Clear the video element
       const videoElement = document.getElementById('local-video');
       if (videoElement) {
         videoElement.srcObject = null;
+        videoElement.load(); // Force reload to clear the video
       }
+      
+      console.log("All media tracks stopped and cleared");
     }
-    toast.success("✅ Left the meeting successfully");
+    
+    // Also remove the meeting from active meetings list
+    setMeetings(prev => prev.filter(meeting => !localStream));
+    
+    toast.success("✅ Left the meeting successfully. Camera and microphone turned off.");
   };
 
   const shareFile = (file) => {
