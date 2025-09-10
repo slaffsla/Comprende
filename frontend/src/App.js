@@ -2098,6 +2098,31 @@ function App() {
                               </div>
                             </div>
                             
+                            {/* Shared Files in Meeting */}
+                            {meeting.files && meeting.files.length > 0 && (
+                              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                                <h5 className="text-sm font-medium mb-2">📎 Shared Files ({meeting.files.length})</h5>
+                                <div className="space-y-1">
+                                  {meeting.files.map((file, index) => (
+                                    <div key={index} className="flex items-center justify-between text-xs">
+                                      <span className="text-gray-700">{file.name}</span>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-6 px-2 text-blue-600 hover:text-blue-800"
+                                        onClick={() => {
+                                          // In a real implementation, this would download the shared file
+                                          toast.info(`Downloading ${file.name}...`);
+                                        }}
+                                      >
+                                        <Download className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Video Interface */}
                             {localStream && (
                               <div className="mt-4 p-4 bg-gray-900 rounded-lg">
