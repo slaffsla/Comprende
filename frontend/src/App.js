@@ -1435,30 +1435,34 @@ function App() {
   };
 
   const leaveMeeting = () => {
+    // Stop local stream
     if (localStream) {
-      // Stop all tracks (video and audio)
       localStream.getTracks().forEach(track => {
         track.stop();
-        console.log(`Stopped ${track.kind} track - readyState: ${track.readyState}`);
       });
-      
-      // Clear the stream reference
       setLocalStream(null);
-      
-      // Clear the video element
-      const videoElement = document.getElementById('local-video');
-      if (videoElement) {
-        videoElement.srcObject = null;
-        videoElement.load(); // Force reload to clear the video
-      }
-      
-      console.log("All media tracks stopped and cleared");
     }
     
-    // Also remove the meeting from active meetings list
-    setMeetings(prev => prev.filter(meeting => !localStream));
+    // Close all peer connections
+    peerConnections.forEach((peerConnection, userId) => {
+      peerConnection.close();
+    });
+    setPeerConnections(new Map());
     
-    toast.success("✅ Left the meeting successfully. Camera and microphone turned off.");
+    // Clear remote streams
+    setRemoteStreams(new Map());
+    setConnectedUsers([]);
+    
+    // Notify other users via WebSocket
+    if (websocket && currentMeetingId) {
+      websocket.send(JSON.stringify({
+        type: 'leave_meeting',
+        meeting_id: currentMeetingId
+      }));
+    }
+    
+    setCurrentMeetingId(null);
+    toast.success("📞 Left the meeting");
   };
 
   const shareFile = (file) => {
