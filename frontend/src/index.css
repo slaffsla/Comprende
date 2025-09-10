@@ -16,6 +16,66 @@ code {
         monospace;
 }
 
+/* Custom toast styling for better visibility */
+.Toastify__toast-container {
+    z-index: 9999;
+}
+
+.Toastify__toast {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    color: #1f2937 !important;
+    font-weight: 500;
+}
+
+.Toastify__toast--success {
+    background-color: rgba(16, 185, 129, 0.95) !important;
+    color: white !important;
+}
+
+.Toastify__toast--error {
+    background-color: rgba(239, 68, 68, 0.95) !important;
+    color: white !important;
+}
+
+.Toastify__toast--info {
+    background-color: rgba(59, 130, 246, 0.95) !important;
+    color: white !important;
+}
+
+.Toastify__toast--warning {
+    background-color: rgba(245, 158, 11, 0.95) !important;
+    color: white !important;
+}
+
+.Toastify__close-button {
+    color: currentColor !important;
+    opacity: 0.8;
+}
+
+.Toastify__close-button:hover {
+    opacity: 1;
+}
+
+/* Better button visibility */
+button {
+    font-weight: 500 !important;
+}
+
+/* Improved select visibility for Mac */
+select, [role="combobox"] {
+    color: #1f2937 !important;
+    background-color: white !important;
+}
+
+/* Improved menu item visibility */
+[role="menuitem"], [role="option"] {
+    color: #1f2937 !important;
+}
+
 
 
 @layer base {
