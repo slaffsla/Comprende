@@ -1457,23 +1457,26 @@ function App() {
                                 
                                 {/* Meeting Controls */}
                                 <div className="flex items-center justify-center space-x-4 mt-4">
-                                  <Button variant="outline" size="sm">
+                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
                                     <Mic className="h-4 w-4" />
+                                    <span className="text-sm">Mute</span>
                                   </Button>
-                                  <Button variant="outline" size="sm">
+                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
                                     <Video className="h-4 w-4" />
+                                    <span className="text-sm">Camera</span>
                                   </Button>
                                   <Button 
                                     variant="destructive" 
                                     size="sm"
                                     onClick={leaveMeeting}
+                                    className="flex items-center space-x-2"
                                   >
-                                    <PhoneOff className="h-4 w-4 mr-1" />
-                                    Leave
+                                    <PhoneOff className="h-4 w-4" />
+                                    <span className="text-sm">Leave</span>
                                   </Button>
-                                  <Button variant="outline" size="sm">
-                                    <Share className="h-4 w-4 mr-1" />
-                                    Share Screen
+                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
+                                    <Share className="h-4 w-4" />
+                                    <span className="text-sm">Share Screen</span>
                                   </Button>
                                 </div>
                               </div>
