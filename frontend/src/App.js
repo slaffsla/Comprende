@@ -189,6 +189,68 @@ function App() {
       console.error('Failed to save settings:', error);
     }
   }, [settings]);
+
+  // Save user to localStorage when it changes
+  useEffect(() => {
+    if (currentUser) {
+      try {
+        localStorage.setItem('comprende-user', JSON.stringify(currentUser));
+        setShowLogin(false);
+      } catch (error) {
+        console.error('Failed to save user:', error);
+      }
+    } else {
+      localStorage.removeItem('comprende-user');
+      setShowLogin(true);
+    }
+  }, [currentUser]);
+
+  const loginUser = async (userData) => {
+    try {
+      // Create or get user from backend
+      const response = await axios.post(`${BACKEND_URL}/api/users`, {
+        username: userData.name,
+        email: userData.email,
+        preferred_languages: [targetLang, sourceLang]
+      });
+      
+      const user = {
+        id: response.data.id,
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.avatar || "👤",
+        joinedAt: new Date().toISOString()
+      };
+      
+      setCurrentUser(user);
+      toast.success(`Welcome, ${user.name}!`);
+      
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Fallback to local user creation
+      const user = {
+        id: `user-${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+        avatar: userData.avatar || "👤",
+        joinedAt: new Date().toISOString()
+      };
+      setCurrentUser(user);
+      toast.success(`Welcome, ${user.name}! (Local session)`);
+    }
+  };
+
+  const logoutUser = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('comprende-user');
+    // Clear any active meetings/streams
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      setLocalStream(null);
+    }
+    setMeetings([]);
+    toast.success("Logged out successfully");
+  };
   
   // Voice recognition refs
   const recognitionRef = useRef(null);
