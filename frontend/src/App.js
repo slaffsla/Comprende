@@ -2487,7 +2487,8 @@ function App() {
                             {/* Video Interface */}
                             {localStream && (
                               <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {/* Local Video */}
                                   <div className="relative">
                                     <video
                                       id="local-video"
@@ -2497,17 +2498,37 @@ function App() {
                                       className="w-full h-48 bg-gray-800 rounded-lg object-cover"
                                     />
                                     <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                      You
+                                      You ({currentUser?.name || 'User'})
                                     </div>
                                   </div>
-                                  <div className="relative">
-                                    <div className="w-full h-48 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
-                                      <div className="text-center">
-                                        <Users className="h-8 w-8 mx-auto mb-2" />
-                                        <p className="text-sm">Waiting for participants...</p>
+                                  
+                                  {/* Remote Videos */}
+                                  {connectedUsers.map((userId) => (
+                                    <div key={userId} className="relative">
+                                      <video
+                                        id={`remote-video-${userId}`}
+                                        autoPlay
+                                        playsInline
+                                        className="w-full h-48 bg-gray-800 rounded-lg object-cover"
+                                      />
+                                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                        {userId}
                                       </div>
                                     </div>
-                                  </div>
+                                  ))}
+                                  
+                                  {/* Placeholder if no other participants */}
+                                  {connectedUsers.length === 0 && (
+                                    <div className="relative">
+                                      <div className="w-full h-48 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
+                                        <div className="text-center">
+                                          <Users className="h-8 w-8 mx-auto mb-2" />
+                                          <p className="text-sm">Waiting for participants...</p>
+                                          <p className="text-xs mt-1">Share the meeting link to invite others</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 {/* Meeting Controls */}
