@@ -267,6 +267,12 @@ frontend:
       - working: true
         agent: "main"
         comment: "FIXED - Implemented WebRTC foundation with getUserMedia, video preview, meeting controls, proper error handling for camera/mic permissions"
+      - working: false
+        agent: "user"
+        comment: "Meeting not found or expired error still occurring for meeting IDs, indicating backend storage problem for meeting states. Join Video button logic flawed - makes no sense when already in video call. Copy meeting link button unclear."
+      - working: true
+        agent: "main"
+        comment: "COMPREHENSIVE FIXES APPLIED - Fixed backend meeting storage with proper datetime serialization and UUID handling. Made Copy Link button more prominent with blue styling and text. Added conditional logic to hide Join Video button when already in video call (shows 'In Video Call' status instead). Resolved Meeting not found errors by ensuring backend-frontend ID consistency and proper MongoDB serialization."
 
   - task: "File Processing UI"
     implemented: true
