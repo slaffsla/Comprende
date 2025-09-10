@@ -212,12 +212,21 @@ function App() {
       try {
         localStorage.setItem('comprende-user', JSON.stringify(currentUser));
         setShowLogin(false);
+        // Initialize WebSocket connection when user logs in
+        setTimeout(() => {
+          initializeWebSocket();
+        }, 1000);
       } catch (error) {
         console.error('Failed to save user:', error);
       }
     } else {
       localStorage.removeItem('comprende-user');
       setShowLogin(true);
+      // Close WebSocket connection when user logs out
+      if (websocket) {
+        websocket.close();
+        setWebsocket(null);
+      }
     }
   }, [currentUser]);
 
