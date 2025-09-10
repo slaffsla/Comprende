@@ -222,6 +222,10 @@ function App() {
         setTimeout(() => {
           initializeWebSocket();
         }, 1000);
+        // Load user teams
+        setTimeout(() => {
+          loadUserTeams();
+        }, 1500);
       } catch (error) {
         console.error('Failed to save user:', error);
       }
@@ -233,6 +237,10 @@ function App() {
         websocket.close();
         setWebsocket(null);
       }
+      // Clear teams data
+      setTeams([]);
+      setCurrentTeam(null);
+      setTeamFiles([]);
     }
   }, [currentUser]);
 
