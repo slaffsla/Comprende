@@ -1913,19 +1913,35 @@ function App() {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => downloadFile(documentResult.extracted_text, `${documentResult.filename}_original.txt`)}
+                          onClick={() => {
+                            const originalExt = documentResult.filename.split('.').pop().toLowerCase();
+                            const downloadName = `${documentResult.filename}_original.${originalExt}`;
+                            if (['pdf', 'xls', 'xlsx'].includes(originalExt)) {
+                              downloadFileFormatted(documentResult.extracted_text, downloadName, originalExt);
+                            } else {
+                              downloadFile(documentResult.extracted_text, downloadName);
+                            }
+                          }}
                         >
                           <Download className="h-4 w-4 mr-1" />
-                          Download Original
+                          Download Original ({documentResult.filename.split('.').pop().toUpperCase()})
                         </Button>
                         {documentResult.translated_text && (
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => downloadFile(documentResult.translated_text, `${documentResult.filename}_translated.txt`)}
+                            onClick={() => {
+                              const originalExt = documentResult.filename.split('.').pop().toLowerCase();
+                              const downloadName = `${documentResult.filename}_translated.${originalExt}`;
+                              if (['pdf', 'xls', 'xlsx'].includes(originalExt)) {
+                                downloadFileFormatted(documentResult.translated_text, downloadName, originalExt);
+                              } else {
+                                downloadFile(documentResult.translated_text, downloadName);
+                              }
+                            }}
                           >
                             <Download className="h-4 w-4 mr-1" />
-                            Download Translation
+                            Download Translation ({documentResult.filename.split('.').pop().toUpperCase()})
                           </Button>
                         )}
                       </div>
