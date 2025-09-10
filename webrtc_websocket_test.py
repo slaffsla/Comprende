@@ -137,7 +137,7 @@ class WebRTCWebSocketTester:
         ws_endpoint = f"{self.ws_url}/ws/{user_id}"
         
         try:
-            async with websockets.connect(ws_endpoint, timeout=10) as websocket:
+            async with asyncio.wait_for(websockets.connect(ws_endpoint), timeout=10) as websocket:
                 # Test joining a meeting
                 join_message = {
                     "type": "join_meeting",
