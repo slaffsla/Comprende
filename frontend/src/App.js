@@ -2034,28 +2034,67 @@ function App() {
                                 <p className="text-sm text-gray-500">
                                   {meeting.participants?.length || 0} participants
                                 </p>
+                                {meeting.link && (
+                                  <div className="mt-2">
+                                    <p className="text-xs text-blue-600 font-mono bg-blue-50 px-2 py-1 rounded">
+                                      {meeting.link}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
-                              <div className="flex space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => joinMeeting(meeting.id)}
-                                  disabled={isLoading}
-                                >
-                                  {isLoading ? (
-                                    <span className="flex items-center">
-                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                                      Connecting...
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <Video className="h-4 w-4 mr-1" />
-                                      Join Video
-                                    </>
-                                  )}
-                                </Button>
-                                <Button variant="outline" size="sm" title="Mute/Unmute">
-                                  <Mic className="h-4 w-4" />
-                                </Button>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => joinMeeting(meeting.id)}
+                                    disabled={isLoading}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+                                  >
+                                    {isLoading ? (
+                                      <span className="flex items-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                        <span className="text-white font-medium">Connecting...</span>
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <Video className="h-4 w-4 mr-1 text-white" />
+                                        <span className="text-white font-medium">Join Video</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    title="Share meeting link"
+                                    onClick={() => shareMeetingLink(meeting)}
+                                    className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                  >
+                                    <Share className="h-4 w-4 text-gray-700" />
+                                  </Button>
+                                </div>
+                                {/* File sharing for meeting */}
+                                <div className="flex space-x-2">
+                                  <input
+                                    type="file"
+                                    id={`file-share-${meeting.id}`}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files[0];
+                                      if (file) {
+                                        shareFileInMeeting(meeting.id, file);
+                                      }
+                                    }}
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => document.getElementById(`file-share-${meeting.id}`).click()}
+                                    className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm text-xs"
+                                  >
+                                    <Upload className="h-3 w-3 mr-1 text-gray-700" />
+                                    <span className="text-gray-900 font-medium">Share File</span>
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                             
