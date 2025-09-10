@@ -1187,6 +1187,8 @@ function App() {
         console.log('Unknown message type:', data.type);
     }
   };
+
+  const joinTeam = async (inviteCode) => {
     try {
       const response = await axios.post(`${BACKEND_URL}/api/teams/join`, {
         invite_code: inviteCode,
