@@ -1169,7 +1169,26 @@ function App() {
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <span className="text-lg">{currentUser.avatar}</span>
+                    {currentUser.avatar && currentUser.avatar.startsWith('data:') ? (
+                      <img 
+                        src={currentUser.avatar} 
+                        alt="User avatar" 
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    ) : currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                      <img 
+                        src={currentUser.avatar} 
+                        alt="User avatar" 
+                        className="w-6 h-6 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'inline';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-lg">👤</span>
+                    )}
+                    <span className="text-lg" style={{display: 'none'}}>👤</span>
                     <span className="hidden sm:inline text-sm">{currentUser.name}</span>
                   </Button>
                 </DialogTrigger>
@@ -1179,11 +1198,42 @@ function App() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{currentUser.avatar}</span>
+                      {currentUser.avatar && currentUser.avatar.startsWith('data:') ? (
+                        <img 
+                          src={currentUser.avatar} 
+                          alt="User avatar" 
+                          className="w-12 h-12 rounded-full object-cover border"
+                        />
+                      ) : currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                        <img 
+                          src={currentUser.avatar} 
+                          alt="User avatar" 
+                          className="w-12 h-12 rounded-full object-cover border"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'inline';
+                          }}
+                        />
+                      ) : (
+                        <span className="text-3xl">👤</span>
+                      )}
+                      <span className="text-3xl" style={{display: 'none'}}>👤</span>
                       <div>
                         <p className="font-medium">{currentUser.name}</p>
                         <p className="text-sm text-gray-500">{currentUser.email}</p>
                       </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Update Avatar</label>
+                      <Input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleAvatarUpload}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Upload a new avatar image (max 1MB)
+                      </p>
                     </div>
                     <div className="pt-4 border-t">
                       <Button onClick={logoutUser} variant="outline" className="w-full">
