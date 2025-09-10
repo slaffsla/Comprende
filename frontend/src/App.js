@@ -935,27 +935,37 @@ function App() {
       setIsLoading(true);
       const meetingId = `meeting-${Date.now()}`;
       
+      // Generate shareable meeting link
+      const meetingLink = `${window.location.origin}/meeting/${meetingId}`;
+      
       // Create meeting in backend first
       const response = await axios.post(`${BACKEND_URL}/api/meetings`, {
         name: "Translation Meeting",
-        participants: ["demo-user"]
+        participants: [currentUser?.name || "demo-user"],
+        link: meetingLink,
+        created_by: currentUser?.id || "demo-user"
       });
       
       if (response.data) {
         const newMeeting = {
           id: response.data.id || meetingId,
           name: response.data.name || "Translation Meeting",
-          participants: response.data.participants || ["demo-user"],
+          participants: response.data.participants || [currentUser?.name || "demo-user"],
           createdAt: new Date(),
-          status: "active"
+          status: "active",
+          link: meetingLink,
+          files: []
         };
         
         setMeetings(prev => [...prev, newMeeting]);
         
+        // Copy meeting link to clipboard automatically
+        await copyToClipboard(meetingLink);
+        
         // Switch to collaborate tab to show the meeting
         setActiveTab("collaborate");
         
-        toast.success("Meeting created successfully! Click 'Join Video' to start video call.");
+        toast.success(`🎥 Meeting created! Link copied to clipboard. Share: ${meetingLink}`);
         
         // Auto-initialize WebRTC after a short delay
         setTimeout(() => {
@@ -967,18 +977,51 @@ function App() {
       console.error('Failed to create meeting:', error);
       // Fallback to client-side meeting creation
       const meetingId = `meeting-${Date.now()}`;
+      const meetingLink = `${window.location.origin}/meeting/${meetingId}`;
+      
       const newMeeting = {
         id: meetingId,
         name: "Translation Meeting",
-        participants: ["demo-user"],
+        participants: [currentUser?.name || "demo-user"],
         createdAt: new Date(),
-        status: "active"
+        status: "active",
+        link: meetingLink,
+        files: []
       };
+      
       setMeetings(prev => [...prev, newMeeting]);
       setActiveTab("collaborate");
-      toast.success("Meeting created successfully! Click 'Join Video' to start video call.");
+      
+      // Copy link and notify user
+      await copyToClipboard(meetingLink);
+      toast.success(`🎥 Meeting created! Share this link: ${meetingLink}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const shareMeetingLink = async (meeting) => {
+    try {
+      await copyToClipboard(meeting.link);
+      toast.success(`🔗 Meeting link copied! Share: ${meeting.link}`);
+    } catch (error) {
+      toast.error("Failed to copy meeting link");
+    }
+  };
+
+  const shareFileInMeeting = async (meetingId, file) => {
+    try {
+      // Add file to meeting's shared files
+      setMeetings(prev => prev.map(meeting => 
+        meeting.id === meetingId 
+          ? { ...meeting, files: [...(meeting.files || []), file] }
+          : meeting
+      ));
+      
+      toast.success(`📎 File "${file.name}" shared with meeting participants`);
+    } catch (error) {
+      console.error('Failed to share file:', error);
+      toast.error("Failed to share file in meeting");
     }
   };
 
