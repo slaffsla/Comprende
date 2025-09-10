@@ -591,7 +591,7 @@ class WebRTCWebSocketTester:
             user_id = "integration_user_1"
             ws_endpoint = f"{self.ws_url}/ws/{user_id}"
             
-            async with websockets.connect(ws_endpoint, timeout=10) as websocket:
+            async with asyncio.wait_for(websockets.connect(ws_endpoint), timeout=10) as websocket:
                 # Join the backend-created meeting via WebSocket
                 join_message = {
                     "type": "join_meeting",
