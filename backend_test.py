@@ -34,6 +34,10 @@ class ComprehendeAPITester:
                     response = requests.post(url, files=files, data=data, timeout=30)
                 else:
                     response = requests.post(url, json=data, headers=headers, timeout=30)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=30)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
 
             success = response.status_code == expected_status
             
