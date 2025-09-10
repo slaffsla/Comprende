@@ -921,7 +921,7 @@ function App() {
                 const userData = {
                   name: formData.get('name'),
                   email: formData.get('email'),
-                  avatar: formData.get('avatar') || "👤"
+                  avatar: formData.get('avatar') || null
                 };
                 if (userData.name && userData.email) {
                   loginUser(userData);
@@ -938,8 +938,48 @@ function App() {
                 <Input name="email" type="email" placeholder="your@email.com" required />
               </div>
               <div>
-                <label className="text-sm font-medium">Avatar (emoji)</label>
-                <Input name="avatar" type="text" placeholder="👤" maxLength={2} />
+                <label className="text-sm font-medium">Avatar</label>
+                <div className="space-y-2">
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        if (file.size > 1024 * 1024) {
+                          toast.error("Avatar image must be smaller than 1MB");
+                          e.target.value = '';
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const preview = document.getElementById('avatar-preview');
+                          if (preview) {
+                            preview.src = event.target.result;
+                            preview.style.display = 'block';
+                          }
+                          // Store the data URL in a hidden input
+                          const hiddenInput = document.getElementById('avatar-data');
+                          if (hiddenInput) {
+                            hiddenInput.value = event.target.result;
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="mb-2"
+                  />
+                  <input type="hidden" name="avatar" id="avatar-data" />
+                  <img 
+                    id="avatar-preview" 
+                    style={{display: 'none'}} 
+                    className="w-10 h-10 rounded-full object-cover border" 
+                    alt="Avatar preview"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Upload an image (max 1MB) or we'll use your Gravatar
+                  </p>
+                </div>
               </div>
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                 Start Using Comprende
