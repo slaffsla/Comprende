@@ -1414,17 +1414,17 @@ function App() {
                       <div>
                         <label className="text-sm font-medium mb-2 block">To</label>
                         <Select value={targetLang} onValueChange={setTargetLang}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Target Language" />
+                          <SelectTrigger className="bg-white border-gray-300 text-gray-900 shadow-sm hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            <SelectValue placeholder="Target Language" className="text-gray-900" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-60 overflow-y-auto bg-white border-gray-200 shadow-lg">
+                          <SelectContent className="max-h-60 overflow-y-auto bg-white border-gray-300 shadow-xl z-50">
                             {Object.entries(LANGUAGES)
                               .sort(([,a], [,b]) => a.localeCompare(b))
                               .map(([code, name]) => (
                               <SelectItem 
                                 key={code} 
                                 value={code}
-                                className="text-gray-900 hover:bg-blue-50 hover:text-blue-700 focus:bg-blue-100 focus:text-blue-800"
+                                className="text-gray-900 hover:bg-blue-100 hover:text-blue-800 focus:bg-blue-200 focus:text-blue-900 cursor-pointer py-2"
                               >
                                 {name}
                               </SelectItem>
