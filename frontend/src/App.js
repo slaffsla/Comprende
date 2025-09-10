@@ -154,6 +154,7 @@ function App() {
   const [meetings, setMeetings] = useState([]);
   const [sharedFiles, setSharedFiles] = useState([]);
   const [localStream, setLocalStream] = useState(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
