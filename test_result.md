@@ -207,6 +207,21 @@ backend:
         agent: "testing"
         comment: "Minor issue found during testing - /api/translations/history and /api/audit/logs endpoints return 500 Internal Server Error due to MongoDB ObjectId serialization issues. Error: 'ObjectId' object is not iterable. This is a non-critical issue as core translation functionality works perfectly, but these endpoints need ObjectId handling fixes."
 
+  - task: "Meeting Backend API Functionality"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported 'Meeting not found or expired' issue - meetings could not be retrieved after creation"
+      - working: true
+        agent: "testing"
+        comment: "CRITICAL MEETING FUNCTIONALITY FIX VERIFIED - All meeting backend APIs working perfectly: ✅ Meeting Creation (POST /api/meetings) - proper UUID generation and datetime serialization to ISO strings for MongoDB, ✅ Meeting Retrieval (GET /api/meetings/{meeting_id}) - proper ObjectId cleanup prevents JSON serialization errors, ✅ Meeting Updates (PUT /api/meetings/{meeting_id}) - participant updates working correctly, ✅ Meeting Storage - MongoDB serialization working with proper datetime handling, ✅ Edge Cases - proper 'Meeting not found or expired' error messages for invalid IDs. ROUTE REGISTRATION FIX: Fixed critical issue where meeting routes were defined after router inclusion, causing 404 errors. All meeting persistence and retrieval working correctly with backend-generated UUIDs instead of timestamp-based IDs."
+
 frontend:
   - task: "Voice Recognition Implementation"
     implemented: true
