@@ -1356,34 +1356,34 @@ function App() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Voice Settings</label>
-                      <div className="space-y-2 mt-2">
-                        <label className="flex items-center">
+                      <label className="text-sm font-medium text-gray-900">Voice Settings</label>
+                      <div className="space-y-3 mt-3">
+                        <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-2" 
+                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
                             checked={settings.voiceInputEnabled}
                             onChange={(e) => setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}))}
                           />
-                          Enable voice input
+                          <span className="text-sm font-medium text-gray-900">Enable voice input</span>
                         </label>
-                        <label className="flex items-center">
+                        <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-2" 
+                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
                             checked={settings.voiceOutputEnabled}
                             onChange={(e) => setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}))}
                           />
-                          Enable voice output
+                          <span className="text-sm font-medium text-gray-900">Enable voice output</span>
                         </label>
-                        <label className="flex items-center">
+                        <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-2" 
+                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
                             checked={settings.autoTranslateVoice}
                             onChange={(e) => setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}))}
                           />
-                          Auto-translate voice input
+                          <span className="text-sm font-medium text-gray-900">Auto-translate voice input</span>
                         </label>
                       </div>
                     </div>
