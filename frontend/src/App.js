@@ -510,7 +510,7 @@ function App() {
     }
   };
 
-
+  const loadUserData = () => {
     // Set up mock team members and notifications
     setUsers([
       { id: "user-1", name: "Demo User", status: "online", avatar: "👤" },
