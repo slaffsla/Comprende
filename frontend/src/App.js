@@ -1390,15 +1390,29 @@ function App() {
                   <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <FileText className="h-5 w-5 text-blue-600" />
-                      <span className="font-medium text-blue-900">{file.name}</span>
+                      <div>
+                        <span className="font-medium text-blue-900">{file.name}</span>
+                        <p className="text-sm text-blue-600">
+                          Size: {(file.size / 1024).toFixed(1)} KB • Type: {file.type || 'Unknown'}
+                        </p>
+                      </div>
                     </div>
-                    <Button 
-                      onClick={handleDocumentUpload} 
-                      disabled={isLoading}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
-                    >
-                      {isLoading ? "Processing..." : "Process Document"}
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={handleDocumentUpload} 
+                        disabled={isLoading}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        {isLoading ? "Processing..." : "Process Document"}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setFile(null)}
+                        disabled={isLoading}
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 )}
 
