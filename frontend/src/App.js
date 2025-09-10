@@ -849,6 +849,57 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <Toaster position="top-right" />
       
+      {/* Login Dialog */}
+      {showLogin && (
+        <Dialog open={showLogin} onOpenChange={() => {}}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Globe className="h-6 w-6 text-blue-600" />
+                <span>Welcome to Comprende</span>
+              </DialogTitle>
+              <p className="text-sm text-gray-600">
+                Enter your details to start translating and collaborating
+              </p>
+            </DialogHeader>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const userData = {
+                  name: formData.get('name'),
+                  email: formData.get('email'),
+                  avatar: formData.get('avatar') || "👤"
+                };
+                if (userData.name && userData.email) {
+                  loginUser(userData);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input name="name" type="text" placeholder="Your name" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input name="email" type="email" placeholder="your@email.com" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Avatar (emoji)</label>
+                <Input name="avatar" type="text" placeholder="👤" maxLength={2} />
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                Start Using Comprende
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {/* Main App Content - Only show when logged in */}
+      {!showLogin && currentUser && (
+        <>
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-md shadow-sm">
         <div className="container mx-auto px-4 py-3">
@@ -876,7 +927,7 @@ function App() {
                     <div className={`w-2 h-2 rounded-full ${
                       healthStatus.status === "healthy" ? "bg-green-500" : "bg-red-500"
                     }`}></div>
-                    <span>{healthStatus.status}</span>
+                    <span>System {healthStatus.status}</span>
                   </div>
                 </Badge>
               )}
