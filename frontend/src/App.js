@@ -339,15 +339,18 @@ function App() {
     utterance.volume = 1;
 
     utterance.onstart = () => {
+      setIsSpeaking(true);
       toast.success(`🔊 Playing in ${LANGUAGES[language] || 'English'}...`);
     };
 
     utterance.onerror = (event) => {
       console.error('Speech synthesis error:', event.error);
+      setIsSpeaking(false);
       toast.error(`Speech playback failed: ${event.error}`);
     };
 
     utterance.onend = () => {
+      setIsSpeaking(false);
       console.log('Speech synthesis finished');
     };
 
