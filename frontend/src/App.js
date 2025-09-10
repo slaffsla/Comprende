@@ -2138,24 +2138,36 @@ function App() {
                               </div>
                               <div className="flex flex-col space-y-2">
                                 <div className="flex space-x-2">
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => joinMeeting(meeting.id)}
-                                    disabled={isLoading}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
-                                  >
-                                    {isLoading ? (
-                                      <span className="flex items-center">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                                        <span className="text-white font-medium">Connecting...</span>
-                                      </span>
-                                    ) : (
-                                      <>
-                                        <Video className="h-4 w-4 mr-1 text-white" />
-                                        <span className="text-white font-medium">Join Video</span>
-                                      </>
-                                    )}
-                                  </Button>
+                                  {/* Only show Join Video button if not already in a video call */}
+                                  {!localStream ? (
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => joinMeeting(meeting.id)}
+                                      disabled={isLoading}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+                                    >
+                                      {isLoading ? (
+                                        <span className="flex items-center">
+                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                          <span className="text-white font-medium">Connecting...</span>
+                                        </span>
+                                      ) : (
+                                        <>
+                                          <Video className="h-4 w-4 mr-1 text-white" />
+                                          <span className="text-white font-medium">Join Video</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm cursor-default"
+                                      disabled={true}
+                                    >
+                                      <Video className="h-4 w-4 mr-1 text-white" />
+                                      <span className="text-white font-medium">In Video Call</span>
+                                    </Button>
+                                  )}
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
