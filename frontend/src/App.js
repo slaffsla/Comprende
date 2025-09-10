@@ -1293,10 +1293,20 @@ function App() {
                           <SelectTrigger>
                             <SelectValue placeholder="Source Language" />
                           </SelectTrigger>
-                          <SelectContent className="max-h-60 overflow-y-auto">
-                            <SelectItem value="auto">Auto-detect</SelectItem>
-                            {Object.entries(LANGUAGES).map(([code, name]) => (
-                              <SelectItem key={code} value={code}>{name}</SelectItem>
+                          <SelectContent className="max-h-60 overflow-y-auto bg-white border-gray-200 shadow-lg">
+                            <SelectItem value="auto" className="font-medium text-gray-900 hover:bg-blue-50 hover:text-blue-700">
+                              Auto-detect
+                            </SelectItem>
+                            {Object.entries(LANGUAGES)
+                              .sort(([,a], [,b]) => a.localeCompare(b))
+                              .map(([code, name]) => (
+                              <SelectItem 
+                                key={code} 
+                                value={code}
+                                className="text-gray-900 hover:bg-blue-50 hover:text-blue-700 focus:bg-blue-100 focus:text-blue-800"
+                              >
+                                {name}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
