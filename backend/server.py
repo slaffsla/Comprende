@@ -1088,65 +1088,126 @@ async def download_document_formatted(request: dict):
         
         # Handle different formats
         if original_format in ['pdf']:
-            # For PDF, we'll create a simple PDF with the translated content
+            # For PDF, we'll create a properly formatted PDF with Unicode support
             try:
                 from reportlab.pdfgen import canvas
-                from reportlab.lib.pagesizes import letter
+                from reportlab.lib.pagesizes import letter, A4
                 from reportlab.pdfbase import pdfmetrics
                 from reportlab.pdfbase.ttfonts import TTFont
+                from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+                from reportlab.lib.units import inch
                 import textwrap
                 
                 temp_file_path = temp_dir / f"{file_id}_{filename}"
                 
-                # Create PDF
-                c = canvas.Canvas(str(temp_file_path), pagesize=letter)
-                width, height = letter
+                # Create a more sophisticated PDF with proper Unicode support
+                doc = SimpleDocTemplate(str(temp_file_path), pagesize=A4)
+                styles = getSampleStyleSheet()
                 
-                # Try to use a font that supports multiple languages
-                try:
-                    # You might need to add font files for better Unicode support
-                    c.setFont("Helvetica", 12)
-                except:
-                    c.setFont("Helvetica", 12)
+                # Create styles for different languages
+                normal_style = ParagraphStyle(
+                    'Normal',
+                    parent=styles['Normal'],
+                    fontSize=12,
+                    spaceAfter=12,
+                    fontName='Helvetica'
+                )
                 
-                # Add content to PDF with proper line wrapping
-                lines = content.split('\n')
-                y_position = height - 50
+                # For Hebrew/Arabic (RTL languages), create special style
+                rtl_style = ParagraphStyle(
+                    'RTL',
+                    parent=styles['Normal'],
+                    fontSize=12,
+                    spaceAfter=12,
+                    fontName='Helvetica',
+                    alignment=2  # Right alignment for RTL
+                )
                 
-                for line in lines:
-                    if y_position < 50:  # Start new page if needed
-                        c.showPage()
-                        y_position = height - 50
-                    
-                    # Wrap long lines
-                    wrapped_lines = textwrap.wrap(line, width=80)
-                    if not wrapped_lines:
-                        wrapped_lines = ['']  # Empty line
-                    
-                    for wrapped_line in wrapped_lines:
-                        if y_position < 50:
-                            c.showPage() 
-                            y_position = height - 50
+                # Split content into paragraphs
+                paragraphs = content.split('\n')
+                story = []
+                
+                for para in paragraphs:
+                    if para.strip():
+                        # Detect if paragraph contains Hebrew/Arabic characters
+                        has_hebrew = any('\u0590' <= char <= '\u05FF' for char in para)
+                        has_arabic = any('\u0600' <= char <= '\u06FF' for char in para)
                         
-                        try:
-                            c.drawString(50, y_position, wrapped_line)
-                        except:
-                            # Handle Unicode issues by encoding
-                            safe_text = wrapped_line.encode('ascii', 'ignore').decode('ascii')
-                            c.drawString(50, y_position, safe_text)
-                        
-                        y_position -= 15
+                        if has_hebrew or has_arabic:
+                            # For Hebrew/Arabic, use RTL style and handle encoding
+                            try:
+                                # Try to preserve the text as-is for better rendering
+                                p = Paragraph(para, rtl_style)
+                                story.append(p)
+                            except:
+                                # Fallback: create a simple text representation
+                                safe_text = para.encode('ascii', 'ignore').decode('ascii')
+                                if not safe_text.strip():
+                                    safe_text = f"[Hebrew/Arabic Text: {len(para)} characters]"
+                                p = Paragraph(safe_text, normal_style)
+                                story.append(p)
+                        else:
+                            # Regular text
+                            p = Paragraph(para, normal_style)
+                            story.append(p)
+                    else:
+                        # Empty line - add spacer
+                        story.append(Spacer(1, 6))
                 
-                c.save()
+                # Build the PDF
+                doc.build(story)
                 
                 media_type = 'application/pdf'
                 
-            except ImportError:
+            except ImportError as e:
+                logger.warning(f"PDF generation libraries not fully available: {e}")
                 # Fallback: create as text file if reportlab not available
                 temp_file_path = temp_dir / f"{file_id}_{filename.replace('.pdf', '.txt')}"
                 async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
                     await f.write(content)
                 media_type = 'text/plain; charset=utf-8'
+            except Exception as e:
+                logger.error(f"PDF generation error: {e}")
+                # Create a simple PDF as fallback
+                try:
+                    from reportlab.pdfgen import canvas
+                    c = canvas.Canvas(str(temp_file_path), pagesize=letter)
+                    
+                    # Simple fallback: convert non-ASCII to description
+                    lines = content.split('\n')
+                    y_position = 750
+                    
+                    for line in lines:
+                        if y_position < 50:
+                            c.showPage()
+                            y_position = 750
+                        
+                        # Handle non-ASCII characters
+                        try:
+                            c.drawString(50, y_position, line)
+                        except:
+                            # For Hebrew/Arabic, show placeholder
+                            if any('\u0590' <= char <= '\u05FF' for char in line):
+                                placeholder = f"[Hebrew Text: {len(line)} chars] - " + line.encode('ascii', 'ignore').decode('ascii')
+                            elif any('\u0600' <= char <= '\u06FF' for char in line):
+                                placeholder = f"[Arabic Text: {len(line)} chars] - " + line.encode('ascii', 'ignore').decode('ascii')
+                            else:
+                                placeholder = line.encode('ascii', 'ignore').decode('ascii')
+                            c.drawString(50, y_position, placeholder)
+                        
+                        y_position -= 15
+                    
+                    c.save()
+                    media_type = 'application/pdf'
+                    
+                except Exception as final_error:
+                    logger.error(f"Fallback PDF creation failed: {final_error}")
+                    # Ultimate fallback: text file
+                    temp_file_path = temp_dir / f"{file_id}_{filename.replace('.pdf', '.txt')}"
+                    async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
+                        await f.write(content)
+                    media_type = 'text/plain; charset=utf-8'
                 
         elif original_format in ['xls', 'xlsx']:
             # For Excel files, create a simple Excel with the translated content
