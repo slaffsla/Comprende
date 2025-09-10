@@ -342,11 +342,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Voice Recognition UI Integration"
-    - "Settings Dialog UI"
+    - "WebRTC and WebSocket Communication Infrastructure"
   stuck_tasks:
-    - "Voice Recognition UI Integration"
-    - "Settings Dialog UI"
+    - "WebRTC and WebSocket Communication Infrastructure"
   test_all: false
   test_priority: "high_first"
 
