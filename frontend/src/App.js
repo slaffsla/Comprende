@@ -153,7 +153,21 @@ function App() {
   const [showLogin, setShowLogin] = useState(!currentUser);
   const [meetings, setMeetings] = useState([]);
   const [sharedFiles, setSharedFiles] = useState([]);
+  // WebRTC and WebSocket state
   const [localStream, setLocalStream] = useState(null);
+  const [remoteStreams, setRemoteStreams] = useState(new Map()); // Map of user_id -> MediaStream
+  const [peerConnections, setPeerConnections] = useState(new Map()); // Map of user_id -> RTCPeerConnection
+  const [websocket, setWebsocket] = useState(null);
+  const [currentMeetingId, setCurrentMeetingId] = useState(null);
+  const [connectedUsers, setConnectedUsers] = useState([]);
+
+  // WebRTC configuration
+  const rtcConfiguration = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  };
   const [notifications, setNotifications] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
