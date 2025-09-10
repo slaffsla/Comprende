@@ -208,8 +208,10 @@ class WebRTCWebSocketTester:
         
         try:
             # Connect both users
-            async with websockets.connect(user1_ws_endpoint, timeout=10) as user1_ws, \
-                       websockets.connect(user2_ws_endpoint, timeout=10) as user2_ws:
+            user1_ws = await asyncio.wait_for(websockets.connect(user1_ws_endpoint), timeout=10)
+            user2_ws = await asyncio.wait_for(websockets.connect(user2_ws_endpoint), timeout=10)
+            
+            async with user1_ws, user2_ws:
                 
                 self.log_test_result(
                     "Dual WebSocket Connections for WebRTC",
