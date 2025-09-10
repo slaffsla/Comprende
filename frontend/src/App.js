@@ -1482,34 +1482,60 @@ function App() {
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-2">Extracted Text:</h4>
+                        <h4 className="font-medium mb-2 flex items-center space-x-2">
+                          <span>Extracted Text:</span>
+                          <Badge variant="outline" className="text-xs">
+                            {LANGUAGES[documentResult.detected_language]} • {(documentResult.confidence * 100).toFixed(1)}% confidence
+                          </Badge>
+                        </h4>
                         <div className="p-3 bg-gray-50 rounded border max-h-40 overflow-y-auto">
-                          <p className="text-sm">{documentResult.extracted_text}</p>
+                          <p className="text-sm whitespace-pre-wrap">{documentResult.extracted_text}</p>
                         </div>
                       </div>
 
                       {documentResult.translated_text && (
                         <div>
-                          <h4 className="font-medium mb-2">Translated Text:</h4>
+                          <h4 className="font-medium mb-2 flex items-center space-x-2">
+                            <span>Translated Text:</span>
+                            <Badge variant="outline" className="text-xs bg-blue-50">
+                              {LANGUAGES[documentResult.detected_language]} → English
+                            </Badge>
+                          </h4>
                           <div className="p-3 bg-blue-50 rounded border max-h-40 overflow-y-auto">
-                            <p className="text-sm">{documentResult.translated_text}</p>
+                            <p className="text-sm whitespace-pre-wrap">{documentResult.translated_text}</p>
                           </div>
                         </div>
                       )}
 
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" onClick={() => copyToClipboard(documentResult.extracted_text)}>
                           <Copy className="h-4 w-4 mr-1" />
-                          Copy Text
+                          Copy Original
                         </Button>
+                        {documentResult.translated_text && (
+                          <Button variant="outline" size="sm" onClick={() => copyToClipboard(documentResult.translated_text)}>
+                            <Copy className="h-4 w-4 mr-1" />
+                            Copy Translation
+                          </Button>
+                        )}
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => downloadFile(documentResult.extracted_text, `${documentResult.filename}_extracted.txt`)}
+                          onClick={() => downloadFile(documentResult.extracted_text, `${documentResult.filename}_original.txt`)}
                         >
                           <Download className="h-4 w-4 mr-1" />
-                          Download
+                          Download Original
                         </Button>
+                        {documentResult.translated_text && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => downloadFile(documentResult.translated_text, `${documentResult.filename}_translated.txt`)}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Download Translation
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
