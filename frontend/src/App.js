@@ -284,14 +284,7 @@ function App() {
   };
 
   const loadUserData = async () => {
-    // Mock user data - in real app, this would come from authentication
-    setCurrentUser({
-      id: "user-1",
-      name: "Demo User",
-      email: "demo@comprende.com",
-      avatar: "👤"
-    });
-    
+    // Set up mock team members and notifications
     setUsers([
       { id: "user-1", name: "Demo User", status: "online", avatar: "👤" },
       { id: "user-2", name: "Alice Johnson", status: "online", avatar: "👩" },
