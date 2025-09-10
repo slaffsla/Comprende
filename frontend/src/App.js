@@ -731,6 +731,11 @@ function App() {
 
   const downloadFile = async (content, filename, type = 'text/plain') => {
     try {
+      // Detect browser type for better error handling
+      const isBrave = navigator.brave && await navigator.brave.isBrave();
+      const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      
       // First try using the backend download endpoint for better reliability
       try {
         const response = await axios.post(`${BACKEND_URL}/api/documents/download`, {
@@ -747,12 +752,32 @@ function App() {
         link.href = url;
         link.download = filename;
         
-        // For better Brave browser compatibility
+        // For better browser compatibility
         link.style.display = 'none';
         document.body.appendChild(link);
         
         // Trigger download
         link.click();
+        
+        // For Brave browser, detect if download actually started
+        if (isBrave) {
+          // Wait a moment to see if download started
+          setTimeout(async () => {
+            try {
+              // Check if download was blocked
+              const downloadPermission = await navigator.permissions.query({name: 'downloads'}).catch(() => null);
+              if (downloadPermission && downloadPermission.state === 'denied') {
+                throw new Error('Downloads blocked by browser');
+              }
+            } catch (permError) {
+              // If permissions check fails, provide guidance anyway
+              toast.error(
+                `🚫 Download may be blocked. Please:\n1. Click the download icon in Brave's address bar\n2. Or go to Settings → Privacy and security → Site and Shields Settings → Downloads → Allow`,
+                { duration: 8000 }
+              );
+            }
+          }, 1000);
+        }
         
         // Cleanup
         setTimeout(() => {
@@ -760,7 +785,12 @@ function App() {
           URL.revokeObjectURL(url);
         }, 100);
         
-        toast.success(`📁 File "${filename}" downloaded successfully!`);
+        // Success message with browser-specific guidance
+        if (isBrave) {
+          toast.success(`📁 Download initiated! If not visible, check Brave's download icon in the address bar.`, { duration: 5000 });
+        } else {
+          toast.success(`📁 File "${filename}" downloaded successfully!`);
+        }
         return;
         
       } catch (backendError) {
@@ -769,6 +799,12 @@ function App() {
       
       // Fallback to client-side download
       const blob = new Blob([content], { type: type });
+      
+      // Verify blob was created successfully
+      if (blob.size === 0) {
+        throw new Error("Empty file content - nothing to download");
+      }
+      
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -778,12 +814,23 @@ function App() {
       link.style.display = 'none';
       document.body.appendChild(link);
       
-      // For Brave and strict browsers - request permission first
+      // For Brave and strict browsers - check permissions first
       if (navigator.permissions) {
         try {
           const permission = await navigator.permissions.query({name: 'downloads'});
           if (permission.state === 'denied') {
-            toast.error("📥 Download permission denied. Please allow downloads in browser settings.");
+            const settingsUrl = isBrave 
+              ? 'brave://settings/content/downloads'
+              : isChrome 
+                ? 'chrome://settings/content/downloads'
+                : isSafari
+                  ? 'Browser Preferences → Websites → Downloads'
+                  : 'browser download settings';
+            
+            toast.error(
+              `📥 Downloads blocked! To enable:\n1. Go to ${settingsUrl}\n2. Allow downloads for this site\n3. Try downloading again`,
+              { duration: 10000 }
+            );
             return;
           }
         } catch (permError) {
@@ -795,22 +842,41 @@ function App() {
       // Trigger download
       link.click();
       
-      // Cleanup
+      // Browser-specific success handling
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        
+        // Provide appropriate feedback based on browser
+        if (isBrave) {
+          toast.success(
+            `📁 Download started! If not visible:\n• Check the download icon in address bar\n• Or press Ctrl+Shift+J to open downloads`,
+            { duration: 7000 }
+          );
+        } else if (isSafari) {
+          toast.success(`📁 File saved to Downloads folder. Check Safari's download button if needed.`);
+        } else {
+          toast.success(`📁 File "${filename}" download completed!`);
+        }
       }, 100);
-      
-      // Verify download by checking if the blob was created successfully
-      if (blob.size > 0) {
-        toast.success(`📁 File "${filename}" download initiated. Check your Downloads folder.`);
-      } else {
-        toast.error("❌ Download failed - empty file content");
-      }
       
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error(`❌ Download failed: ${error.message}`);
+      
+      // Browser-specific error guidance
+      const isBrave = navigator.brave && await navigator.brave.isBrave();
+      const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+      
+      let errorMessage = `❌ Download failed: ${error.message}`;
+      let guidance = "";
+      
+      if (isBrave) {
+        guidance = "\n\n🔧 Brave Browser Help:\n1. Click the shield icon in address bar\n2. Turn off 'Block downloads'\n3. Or go to brave://settings/content/downloads";
+      } else if (isChrome) {
+        guidance = "\n\n🔧 Chrome Help:\n1. Check if downloads are blocked (address bar icon)\n2. Or go to chrome://settings/content/downloads";
+      }
+      
+      toast.error(errorMessage + guidance, { duration: 10000 });
     }
   };
 
