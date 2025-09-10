@@ -1491,6 +1491,82 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
                 await manager.broadcast(
                     json.dumps({"type": "meeting_message", "data": message_data["data"]})
                 )
+            elif message_data["type"] == "join_meeting":
+                # User joins a meeting
+                meeting_id = message_data["meeting_id"]
+                await manager.join_meeting(user_id, meeting_id)
+                
+                # Notify other participants that user joined
+                await manager.broadcast_to_meeting(
+                    json.dumps({
+                        "type": "user_joined",
+                        "user_id": user_id,
+                        "meeting_id": meeting_id
+                    }),
+                    meeting_id,
+                    exclude_user=user_id
+                )
+                
+                # Send list of existing participants to the new user
+                existing_participants = manager.meeting_participants.get(meeting_id, [])
+                await manager.send_personal_message(
+                    json.dumps({
+                        "type": "existing_participants",
+                        "participants": [p for p in existing_participants if p != user_id]
+                    }),
+                    user_id
+                )
+                
+            elif message_data["type"] == "leave_meeting":
+                # User leaves a meeting
+                meeting_id = message_data["meeting_id"]
+                await manager.leave_meeting(user_id, meeting_id)
+                
+                # Notify other participants that user left
+                await manager.broadcast_to_meeting(
+                    json.dumps({
+                        "type": "user_left",
+                        "user_id": user_id,
+                        "meeting_id": meeting_id
+                    }),
+                    meeting_id
+                )
+                
+            elif message_data["type"] == "webrtc_offer":
+                # Forward WebRTC offer to target user
+                target_user = message_data["target_user"]
+                await manager.send_personal_message(
+                    json.dumps({
+                        "type": "webrtc_offer",
+                        "from_user": user_id,
+                        "offer": message_data["offer"]
+                    }),
+                    target_user
+                )
+                
+            elif message_data["type"] == "webrtc_answer":
+                # Forward WebRTC answer to target user
+                target_user = message_data["target_user"]
+                await manager.send_personal_message(
+                    json.dumps({
+                        "type": "webrtc_answer",
+                        "from_user": user_id,
+                        "answer": message_data["answer"]
+                    }),
+                    target_user
+                )
+                
+            elif message_data["type"] == "webrtc_ice_candidate":
+                # Forward ICE candidate to target user
+                target_user = message_data["target_user"]
+                await manager.send_personal_message(
+                    json.dumps({
+                        "type": "webrtc_ice_candidate",
+                        "from_user": user_id,
+                        "candidate": message_data["candidate"]
+                    }),
+                    target_user
+                )
                 
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
