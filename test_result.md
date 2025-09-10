@@ -378,7 +378,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WebRTC and WebSocket Communication Infrastructure"
+    - "Team Management API"
+    - "Team File Sharing API" 
+    - "Enhanced File Sharing API"
   stuck_tasks:
     - "WebRTC and WebSocket Communication Infrastructure"
   test_all: false
