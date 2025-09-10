@@ -323,7 +323,6 @@ test_plan:
   current_focus:
     - "Voice Recognition UI Integration"
     - "Settings Dialog UI"
-    - "Translation History and Audit Logs"
   stuck_tasks:
     - "Voice Recognition UI Integration"
     - "Settings Dialog UI"
