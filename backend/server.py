@@ -117,6 +117,34 @@ class Meeting(BaseModel):
     scheduled_time: Optional[datetime] = None
     status: str = "scheduled"  # scheduled, active, ended
 
+class TeamCreate(BaseModel):
+    name: str
+    description: Optional[str] = ""
+
+class Team(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = ""
+    created_by: str
+    members: List[str] = []
+    invite_code: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    settings: Dict[str, Any] = Field(default_factory=dict)
+
+class TeamFileShare(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    original_name: str
+    file_path: str
+    uploaded_by: str
+    team_id: str
+    file_type: str
+    file_size: int
+    description: Optional[str] = ""
+    tags: List[str] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    access_permissions: Dict[str, str] = Field(default_factory=dict)  # user_id -> permission level
+
 class SharedFile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     filename: str
@@ -124,8 +152,11 @@ class SharedFile(BaseModel):
     file_path: str
     shared_by: str
     shared_with: List[str] = []
+    team_id: Optional[str] = None  # New: associate with team
     file_type: str
     file_size: int
+    description: Optional[str] = ""
+    tags: List[str] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
     access_level: str = "read"  # read, write, admin
 
