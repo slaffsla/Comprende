@@ -2159,11 +2159,12 @@ function App() {
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
-                                    title="Share meeting link"
+                                    title="Copy meeting link to share"
                                     onClick={() => shareMeetingLink(meeting)}
-                                    className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                    className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 font-medium shadow-sm"
                                   >
-                                    <Share className="h-4 w-4 text-gray-700" />
+                                    <Share className="h-4 w-4 text-blue-700 mr-1" />
+                                    <span className="text-blue-700 font-medium">Copy Link</span>
                                   </Button>
                                 </div>
                                 {/* File sharing for meeting */}
