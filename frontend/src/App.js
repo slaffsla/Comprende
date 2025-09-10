@@ -1074,9 +1074,33 @@ function App() {
                 </DialogContent>
               </Dialog>
 
-              <Button variant="ghost" size="sm">
-                <User className="h-4 w-4" />
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <span className="text-lg">{currentUser.avatar}</span>
+                    <span className="hidden sm:inline text-sm">{currentUser.name}</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>User Profile</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{currentUser.avatar}</span>
+                      <div>
+                        <p className="font-medium">{currentUser.name}</p>
+                        <p className="text-sm text-gray-500">{currentUser.email}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <Button onClick={logoutUser} variant="outline" className="w-full">
+                        Logout
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
