@@ -1391,9 +1391,19 @@ function App() {
                       <Button 
                         onClick={handleTranslate} 
                         disabled={isLoading || !sourceText.trim()}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-0"
                       >
-                        {isLoading ? "Translating..." : "Translate"}
+                        {isLoading ? (
+                          <div className="flex items-center space-x-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span className="text-white">Translating...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <Languages className="h-4 w-4 text-white" />
+                            <span className="text-white font-medium">Translate</span>
+                          </div>
+                        )}
                       </Button>
                     </div>
 
