@@ -361,8 +361,8 @@ class TranslationService:
         french_words = ['le', 'de', 'et', 'à', 'un', 'il', 'être', 'et', 'en', 'avoir', 'que', 'pour', 'dans', 'ce', 'son']
         french_count = sum(1 for word in french_words if word in text_lower)
         
-        # German detection
-        german_words = ['der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im']
+        # German detection - enhanced with more words
+        german_words = ['der', 'die', 'das', 'und', 'in', 'den', 'von', 'zu', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im', 'eine', 'einen', 'einer', 'dem', 'nicht', 'ein', 'eine', 'als', 'auch', 'nach', 'wie', 'bei', 'aus', 'werden', 'hat', 'sie', 'kann', 'über', 'nur', 'noch', 'wenn', 'man', 'aber', 'sein', 'ich', 'war', 'sind', 'oder', 'wir', 'haben', 'er', 'es', 'wird', 'so', 'vor', 'da', 'bis', 'vom', 'durch', 'mehr', 'sehr', 'zur', 'ohne', 'schon', 'alle', 'unter', 'einem', 'dieser', 'gegen', 'am', 'zwischen', 'um', 'während', 'ihre', 'einem', 'seine', 'meine', 'ihren', 'seine', 'weil', 'denn', 'seit', 'heute', 'morgen', 'gestern', 'hier', 'dort', 'jetzt', 'dann', 'immer', 'wieder', 'oft', 'manchmal', 'nie', 'gut', 'besser', 'beste', 'groß', 'klein', 'neu', 'alt', 'jung', 'schnee', 'bergluft', 'pferde', 'musik', 'rhythmus', 'gemächliche', 'hufe', 'frisch', 'gefallenen', 'schellen', 'glöckchen', 'zaumzeug', 'haflinger', 'klingen', 'süße', 'klaren']
         german_count = sum(1 for word in german_words if word in text_lower)
         
         # Italian detection
