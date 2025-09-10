@@ -629,6 +629,300 @@ Playing musical instruments (Mostly Handpan)"""
         
         return success
 
+    def test_meeting_creation(self):
+        """Test meeting creation endpoint"""
+        meeting_data = {
+            "name": "Test Meeting - Backend API Testing",
+            "participants": ["user1@example.com", "user2@example.com"],
+            "scheduled_time": None
+        }
+        
+        success, response = self.run_test(
+            "Meeting Creation",
+            "POST",
+            "meetings",
+            200,
+            data=meeting_data
+        )
+        
+        if success:
+            meeting_id = response.get('id', '')
+            print(f"   Meeting ID: {meeting_id}")
+            print(f"   Meeting Name: {response.get('name', '')}")
+            print(f"   Participants: {response.get('participants', [])}")
+            print(f"   Status: {response.get('status', '')}")
+            print(f"   Created By: {response.get('created_by', '')}")
+            
+            # Verify UUID format
+            if meeting_id and len(meeting_id) == 36 and meeting_id.count('-') == 4:
+                print("   ✅ Meeting ID is proper UUID format")
+            else:
+                print("   ❌ Meeting ID is not proper UUID format")
+                self.failed_tests.append({
+                    'name': 'Meeting ID Format',
+                    'expected': 'UUID format (36 chars with 4 dashes)',
+                    'actual': f'ID: {meeting_id}',
+                    'response': 'Meeting ID should be UUID, not timestamp-based'
+                })
+            
+            # Store meeting ID for retrieval test
+            self.test_meeting_id = meeting_id
+            
+            # Verify datetime serialization
+            created_at = response.get('created_at', '')
+            if created_at and 'T' in created_at:
+                print("   ✅ DateTime properly serialized to ISO string")
+            else:
+                print("   ❌ DateTime serialization issue")
+                self.failed_tests.append({
+                    'name': 'DateTime Serialization',
+                    'expected': 'ISO string format',
+                    'actual': f'created_at: {created_at}',
+                    'response': 'DateTime should be serialized to ISO string for MongoDB'
+                })
+        
+        return success
+
+    def test_meeting_retrieval(self):
+        """Test meeting retrieval by ID"""
+        if not hasattr(self, 'test_meeting_id'):
+            print("   ⚠️  Skipping meeting retrieval - no meeting ID from creation test")
+            return False
+        
+        success, response = self.run_test(
+            "Meeting Retrieval",
+            "GET",
+            f"meetings/{self.test_meeting_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Retrieved Meeting ID: {response.get('id', '')}")
+            print(f"   Meeting Name: {response.get('name', '')}")
+            print(f"   Status: {response.get('status', '')}")
+            
+            # Verify no MongoDB ObjectId fields
+            if '_id' in response:
+                print("   ❌ CRITICAL: MongoDB ObjectId field found in response")
+                self.failed_tests.append({
+                    'name': 'MongoDB ObjectId Cleanup',
+                    'expected': 'No _id field in response',
+                    'actual': '_id field present',
+                    'response': 'ObjectId fields should be removed to prevent JSON serialization errors'
+                })
+            else:
+                print("   ✅ No MongoDB ObjectId fields in response")
+            
+            # Verify meeting data integrity
+            if response.get('id') == self.test_meeting_id:
+                print("   ✅ Meeting ID matches created meeting")
+            else:
+                print("   ❌ Meeting ID mismatch")
+        
+        return success
+
+    def test_meeting_update(self):
+        """Test meeting update endpoint"""
+        if not hasattr(self, 'test_meeting_id'):
+            print("   ⚠️  Skipping meeting update - no meeting ID from creation test")
+            return False
+        
+        update_data = {
+            "participants": ["user1@example.com", "user2@example.com", "user3@example.com"],
+            "status": "active"
+        }
+        
+        success, response = self.run_test(
+            "Meeting Update",
+            "PUT",
+            f"meetings/{self.test_meeting_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated participants: {response.get('participants', [])}")
+            print(f"   Updated status: {response.get('status', '')}")
+            
+            # Verify update was applied
+            if len(response.get('participants', [])) == 3:
+                print("   ✅ Participants updated successfully")
+            else:
+                print("   ❌ Participants update failed")
+            
+            if response.get('status') == 'active':
+                print("   ✅ Status updated successfully")
+            else:
+                print("   ❌ Status update failed")
+        
+        return success
+
+    def test_meeting_list(self):
+        """Test meeting list endpoint"""
+        success, response = self.run_test(
+            "Meeting List",
+            "GET",
+            "meetings",
+            200
+        )
+        
+        if success:
+            if isinstance(response, list):
+                print(f"   Found {len(response)} meetings")
+                
+                # Check if our test meeting is in the list
+                test_meeting_found = False
+                if hasattr(self, 'test_meeting_id'):
+                    for meeting in response:
+                        if meeting.get('id') == self.test_meeting_id:
+                            test_meeting_found = True
+                            print("   ✅ Test meeting found in list")
+                            break
+                    
+                    if not test_meeting_found:
+                        print("   ❌ Test meeting not found in list")
+                
+                # Verify no ObjectId fields in any meeting
+                objectid_found = False
+                for meeting in response:
+                    if '_id' in meeting:
+                        objectid_found = True
+                        break
+                
+                if objectid_found:
+                    print("   ❌ CRITICAL: MongoDB ObjectId fields found in meeting list")
+                    self.failed_tests.append({
+                        'name': 'Meeting List ObjectId Cleanup',
+                        'expected': 'No _id fields in meeting list',
+                        'actual': '_id fields present',
+                        'response': 'ObjectId fields should be removed from all meetings'
+                    })
+                else:
+                    print("   ✅ No MongoDB ObjectId fields in meeting list")
+            else:
+                print(f"   Unexpected response format: {type(response)}")
+        
+        return success
+
+    def test_meeting_not_found(self):
+        """Test meeting retrieval with invalid ID"""
+        invalid_meeting_id = "00000000-0000-0000-0000-000000000000"
+        
+        success, response = self.run_test(
+            "Meeting Not Found",
+            "GET",
+            f"meetings/{invalid_meeting_id}",
+            404
+        )
+        
+        if success:
+            # Check for proper error message
+            if isinstance(response, dict) and 'detail' in response:
+                error_message = response['detail']
+                print(f"   Error message: {error_message}")
+                
+                if "Meeting not found or expired" in error_message:
+                    print("   ✅ Proper 'Meeting not found or expired' error message")
+                else:
+                    print("   ❌ Error message doesn't match expected format")
+                    self.failed_tests.append({
+                        'name': 'Meeting Not Found Error Message',
+                        'expected': 'Meeting not found or expired',
+                        'actual': error_message,
+                        'response': 'Error message should be user-friendly'
+                    })
+            else:
+                print("   ❌ No proper error message in response")
+        
+        return success
+
+    def test_meeting_update_not_found(self):
+        """Test meeting update with invalid ID"""
+        invalid_meeting_id = "00000000-0000-0000-0000-000000000000"
+        update_data = {"status": "ended"}
+        
+        success, response = self.run_test(
+            "Meeting Update Not Found",
+            "PUT",
+            f"meetings/{invalid_meeting_id}",
+            404,
+            data=update_data
+        )
+        
+        if success:
+            print("   ✅ Proper 404 response for invalid meeting update")
+        
+        return success
+
+    def test_meeting_storage_verification(self):
+        """Test meeting storage in MongoDB with proper serialization"""
+        print("\n🔍 MEETING STORAGE VERIFICATION")
+        print("   Testing MongoDB storage and serialization...")
+        
+        # Create a meeting with scheduled time to test datetime serialization
+        from datetime import datetime, timezone
+        scheduled_time = datetime.now(timezone.utc).isoformat()
+        
+        meeting_data = {
+            "name": "Storage Test Meeting",
+            "participants": ["storage@test.com"],
+            "scheduled_time": scheduled_time
+        }
+        
+        success, response = self.run_test(
+            "Meeting Storage with DateTime",
+            "POST",
+            "meetings",
+            200,
+            data=meeting_data
+        )
+        
+        if success:
+            meeting_id = response.get('id', '')
+            stored_scheduled_time = response.get('scheduled_time', '')
+            
+            print(f"   Original scheduled_time: {scheduled_time}")
+            print(f"   Stored scheduled_time: {stored_scheduled_time}")
+            
+            # Verify datetime was properly serialized
+            if stored_scheduled_time and 'T' in stored_scheduled_time:
+                print("   ✅ Scheduled time properly serialized to ISO string")
+            else:
+                print("   ❌ Scheduled time serialization failed")
+                self.failed_tests.append({
+                    'name': 'Meeting DateTime Serialization',
+                    'expected': 'ISO string format',
+                    'actual': f'scheduled_time: {stored_scheduled_time}',
+                    'response': 'DateTime fields should be serialized for MongoDB storage'
+                })
+            
+            # Test retrieval to ensure no serialization errors
+            retrieval_success, retrieval_response = self.run_test(
+                "Meeting Storage Retrieval Verification",
+                "GET",
+                f"meetings/{meeting_id}",
+                200
+            )
+            
+            if retrieval_success:
+                print("   ✅ Meeting retrieved successfully after storage")
+                
+                # Verify no ObjectId serialization issues
+                if '_id' not in retrieval_response:
+                    print("   ✅ No ObjectId serialization issues")
+                else:
+                    print("   ❌ ObjectId serialization issue detected")
+            else:
+                print("   ❌ Meeting retrieval failed after storage")
+                self.failed_tests.append({
+                    'name': 'Meeting Storage Retrieval',
+                    'expected': 'Successful retrieval after storage',
+                    'actual': 'Retrieval failed',
+                    'response': 'Meeting should be retrievable after storage'
+                })
+        
+        return success
+
 def main():
     print("🚀 Starting Comprende API Testing Suite")
     print("=" * 60)
