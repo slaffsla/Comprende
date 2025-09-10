@@ -171,8 +171,14 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  // Teams and file sharing state
   const [teams, setTeams] = useState([]);
   const [currentTeam, setCurrentTeam] = useState(null);
+  const [teamFiles, setTeamFiles] = useState([]);
+  const [showTeamCreator, setShowTeamCreator] = useState(false);
+  const [showTeamJoiner, setShowTeamJoiner] = useState(false);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [selectedTeamForFiles, setSelectedTeamForFiles] = useState(null);
   
   // Settings state with localStorage persistence
   const [settings, setSettings] = useState(() => {
