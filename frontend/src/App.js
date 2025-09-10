@@ -157,6 +157,8 @@ function App() {
   const [notifications, setNotifications] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [currentTeam, setCurrentTeam] = useState(null);
   
   // Settings state with localStorage persistence
   const [settings, setSettings] = useState(() => {
