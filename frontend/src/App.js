@@ -1912,26 +1912,38 @@ function App() {
                                 
                                 {/* Meeting Controls */}
                                 <div className="flex items-center justify-center space-x-4 mt-4">
-                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                                    <Mic className="h-4 w-4" />
-                                    <span className="text-sm">Mute</span>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                  >
+                                    <Mic className="h-4 w-4 text-gray-700" />
+                                    <span className="text-sm text-gray-900 font-medium">Mute</span>
                                   </Button>
-                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                                    <Video className="h-4 w-4" />
-                                    <span className="text-sm">Camera</span>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                  >
+                                    <Video className="h-4 w-4 text-gray-700" />
+                                    <span className="text-sm text-gray-900 font-medium">Camera</span>
                                   </Button>
                                   <Button 
                                     variant="destructive" 
                                     size="sm"
                                     onClick={leaveMeeting}
-                                    className="flex items-center space-x-2"
+                                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm"
                                   >
-                                    <PhoneOff className="h-4 w-4" />
-                                    <span className="text-sm">Leave</span>
+                                    <PhoneOff className="h-4 w-4 text-white" />
+                                    <span className="text-sm text-white font-medium">Leave</span>
                                   </Button>
-                                  <Button variant="outline" size="sm" className="flex items-center space-x-2">
-                                    <Share className="h-4 w-4" />
-                                    <span className="text-sm">Share Screen</span>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                  >
+                                    <Share className="h-4 w-4 text-gray-700" />
+                                    <span className="text-sm text-gray-900 font-medium">Share Screen</span>
                                   </Button>
                                 </div>
                               </div>
