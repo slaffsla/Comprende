@@ -1359,26 +1359,33 @@ function App() {
                           placeholder="Enter text to translate..."
                           value={sourceText}
                           onChange={(e) => setSourceText(e.target.value)}
-                          className="min-h-32 resize-none pr-12"
+                          className="min-h-32 resize-none pr-16 pb-12"
                           dir={sourceLang === 'heb' || sourceLang === 'ara' ? 'rtl' : 'ltr'}
                         />
-                        <Button
-                          variant={isListening ? "destructive" : "ghost"}
-                          size="sm"
-                          className={`absolute bottom-2 right-2 h-8 w-8 p-0 ${
-                            isListening 
-                              ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                              : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
-                          }`}
-                          onClick={toggleVoiceInput}
-                          title={isListening ? "Stop listening" : "Start voice input"}
-                        >
-                          {isListening ? (
-                            <MicOff className="h-4 w-4" />
-                          ) : (
-                            <Mic className="h-4 w-4 text-blue-600" />
+                        <div className="absolute bottom-3 right-3 flex items-center space-x-2">
+                          <Button
+                            variant={isListening ? "destructive" : "secondary"}
+                            size="sm"
+                            className={`h-8 w-8 p-0 shadow-sm ${
+                              isListening 
+                                ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse border-red-300' 
+                                : 'bg-blue-500 hover:bg-blue-600 text-white border-blue-300'
+                            }`}
+                            onClick={toggleVoiceInput}
+                            title={isListening ? "Stop voice input" : "Start voice input"}
+                          >
+                            {isListening ? (
+                              <MicOff className="h-4 w-4" />
+                            ) : (
+                              <Mic className="h-4 w-4" />
+                            )}
+                          </Button>
+                          {settings.voiceInputEnabled && (
+                            <span className="text-xs text-gray-500 hidden sm:inline">
+                              {isListening ? "Listening..." : "Voice"}
+                            </span>
                           )}
-                        </Button>
+                        </div>
                       </div>
 
                       <Button 
