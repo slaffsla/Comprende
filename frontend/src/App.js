@@ -2928,6 +2928,130 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Team Creation Dialog */}
+      <Dialog open={showTeamCreator} onOpenChange={setShowTeamCreator}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Team</DialogTitle>
+            <DialogDescription>
+              Create a team to collaborate and share files with others
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const teamName = formData.get('teamName');
+              const teamDescription = formData.get('teamDescription');
+              if (teamName) {
+                createTeam(teamName, teamDescription);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="text-sm font-medium">Team Name</label>
+              <Input name="teamName" type="text" placeholder="Enter team name" required />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description (Optional)</label>
+              <Textarea name="teamDescription" placeholder="Brief description of your team" />
+            </div>
+            <div className="flex space-x-2">
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                Create Team
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowTeamCreator(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Team Join Dialog */}
+      <Dialog open={showTeamJoiner} onOpenChange={setShowTeamJoiner}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Join Team</DialogTitle>
+            <DialogDescription>
+              Enter the invite code to join an existing team
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const inviteCode = formData.get('inviteCode');
+              if (inviteCode) {
+                joinTeam(inviteCode);
+                setShowTeamJoiner(false);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="text-sm font-medium">Invite Code</label>
+              <Input name="inviteCode" type="text" placeholder="Enter team invite code" required />
+            </div>
+            <div className="flex space-x-2">
+              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+                Join Team
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowTeamJoiner(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Dialog */}
+      <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Upload File to Team</DialogTitle>
+            <DialogDescription>
+              Share a file with your team members
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const file = formData.get('file');
+              const description = formData.get('description');
+              const tags = formData.get('tags');
+              if (file && currentTeam) {
+                uploadTeamFile(currentTeam.id, file, description, tags);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="text-sm font-medium">File</label>
+              <Input name="file" type="file" required />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description (Optional)</label>
+              <Textarea name="description" placeholder="Brief description of the file" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Tags (Optional)</label>
+              <Input name="tags" type="text" placeholder="Comma-separated tags" />
+            </div>
+            <div className="flex space-x-2">
+              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+                Upload File
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowFileUpload(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       </>
       )}
     </div>
