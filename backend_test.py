@@ -663,6 +663,11 @@ def main():
     tester.test_hebrew_document_processing()
     tester.test_arabic_document_processing()
     
+    # CRITICAL PDF Processing Fix Test
+    print("\n🎯 CRITICAL PDF PROCESSING FIX VERIFICATION")
+    print("-" * 50)
+    tester.test_vladislav_resume_pdf_processing()
+    
     # File Download Tests
     print("\n📥 FILE DOWNLOAD TESTS")
     print("-" * 30)
