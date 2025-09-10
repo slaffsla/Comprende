@@ -1064,14 +1064,221 @@ async def get_meetings(user_id: Optional[str] = None):
     
     return [Meeting(**meeting) for meeting in meetings]
 
+@api_router.post("/teams/{team_id}/files/upload")
+async def upload_team_file(
+    team_id: str,
+    file: UploadFile = File(...),
+    description: str = Form(""),
+    tags: str = Form(""),
+    user_id: str = "demo-user"
+):
+    """Upload a file to a team workspace"""
+    try:
+        # Verify team exists and user has access
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id not in team_data.get("members", []):
+            raise HTTPException(status_code=403, detail="Access denied: You are not a member of this team")
+        
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        # Save the uploaded file
+        file_path = await file_manager.save_upload_file(file)
+        
+        # Get file size
+        file_size = Path(file_path).stat().st_size
+        
+        # Parse tags
+        tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()] if tags else []
+        
+        # Create team file record
+        team_file = TeamFileShare(
+            filename=f"team_{team_id}_{file.filename}",
+            original_name=file.filename,
+            file_path=file_path,
+            uploaded_by=user_id,
+            team_id=team_id,
+            file_type=mimetypes.guess_type(file.filename)[0] or "application/octet-stream",
+            file_size=file_size,
+            description=description,
+            tags=tag_list
+        )
+        
+        # Convert to dict and ensure proper serialization
+        team_file_dict = team_file.dict()
+        if 'created_at' in team_file_dict:
+            team_file_dict['created_at'] = team_file_dict['created_at'].isoformat()
+        team_file_dict.pop('_id', None)
+        
+        # Store in database
+        await db.team_files.insert_one(team_file_dict)
+        
+        # Create notifications for all team members except uploader
+        team_members = team_data.get("members", [])
+        for member_id in team_members:
+            if member_id != user_id:
+                notification = Notification(
+                    user_id=member_id,
+                    type="file",
+                    title="New Team File",
+                    message=f"New file '{file.filename}' uploaded to team '{team_data.get('name')}'"
+                )
+                notification_dict = notification.dict()
+                if 'created_at' in notification_dict:
+                    notification_dict['created_at'] = notification_dict['created_at'].isoformat()
+                notification_dict.pop('_id', None)
+                await db.notifications.insert_one(notification_dict)
+        
+        # Log audit event
+        await log_audit_event(user_id, "UPLOAD", "TEAM_FILE", {
+            "team_id": team_id,
+            "filename": file.filename,
+            "file_size": file_size,
+            "tags": tag_list
+        })
+        
+        return {
+            "message": "File uploaded successfully",
+            "file_id": team_file.id,
+            "filename": file.filename,
+            "team_id": team_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Team file upload failed: {e}")
+        raise HTTPException(status_code=500, detail="File upload failed")
+
+@api_router.get("/teams/{team_id}/files")
+async def get_team_files(team_id: str, user_id: str = "demo-user"):
+    """Get all files for a team"""
+    try:
+        # Verify team access
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id not in team_data.get("members", []):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get team files
+        team_files = await db.team_files.find({"team_id": team_id}).to_list(1000)
+        
+        # Clean up ObjectId fields
+        for file_doc in team_files:
+            file_doc.pop('_id', None)
+        
+        return {
+            "team_id": team_id,
+            "team_name": team_data.get("name"),
+            "files": [TeamFileShare(**file_doc) for file_doc in team_files]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get team files error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get team files")
+
+@api_router.get("/teams/{team_id}/files/{file_id}/download")
+async def download_team_file(team_id: str, file_id: str, user_id: str = "demo-user"):
+    """Download a team file"""
+    try:
+        # Verify team access
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id not in team_data.get("members", []):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Find the file
+        file_data = await db.team_files.find_one({"id": file_id, "team_id": team_id})
+        if not file_data:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        file_path = Path(file_data.get("file_path"))
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found on disk")
+        
+        # Log audit event
+        await log_audit_event(user_id, "DOWNLOAD", "TEAM_FILE", {
+            "team_id": team_id,
+            "file_id": file_id,
+            "filename": file_data.get("original_name")
+        })
+        
+        return FileResponse(
+            path=str(file_path),
+            filename=file_data.get("original_name"),
+            media_type=file_data.get("file_type", "application/octet-stream")
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Team file download error: {e}")
+        raise HTTPException(status_code=500, detail="File download failed")
+
+@api_router.delete("/teams/{team_id}/files/{file_id}")
+async def delete_team_file(team_id: str, file_id: str, user_id: str = "demo-user"):
+    """Delete a team file"""
+    try:
+        # Verify team access
+        team_data = await db.teams.find_one({"id": team_id})
+        if not team_data:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        if user_id not in team_data.get("members", []):
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Find the file
+        file_data = await db.team_files.find_one({"id": file_id, "team_id": team_id})
+        if not file_data:
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Check permissions (only uploader or team creator can delete)
+        if user_id != file_data.get("uploaded_by") and user_id != team_data.get("created_by"):
+            raise HTTPException(status_code=403, detail="Only file uploader or team creator can delete this file")
+        
+        # Delete file from database
+        await db.team_files.delete_one({"id": file_id})
+        
+        # Delete physical file
+        file_path = Path(file_data.get("file_path"))
+        if file_path.exists():
+            file_path.unlink()
+        
+        # Log audit event
+        await log_audit_event(user_id, "DELETE", "TEAM_FILE", {
+            "team_id": team_id,
+            "file_id": file_id,
+            "filename": file_data.get("original_name")
+        })
+        
+        return {"message": "File deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Team file deletion error: {e}")
+        raise HTTPException(status_code=500, detail="File deletion failed")
+
 @api_router.post("/files/share")
 async def share_file(
     file: UploadFile = File(...),
     shared_with: str = Form(""),
+    team_id: str = Form(""),
     access_level: str = Form("read"),
+    description: str = Form(""),
+    tags: str = Form(""),
     user_id: str = "demo-user"
 ):
-    """Share a file with other users"""
+    """Enhanced file sharing with team support"""
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
     
@@ -1079,24 +1286,53 @@ async def share_file(
         # Save the uploaded file
         file_path = await file_manager.save_upload_file(file)
         
+        # Get file size
+        file_size = Path(file_path).stat().st_size
+        
+        # Parse shared_with and tags
+        shared_with_list = [user.strip() for user in shared_with.split(",") if user.strip()] if shared_with else []
+        tag_list = [tag.strip() for tag in tags.split(',') if tag.strip()] if tags else []
+        
+        # If team_id provided, verify team access
+        if team_id:
+            team_data = await db.teams.find_one({"id": team_id})
+            if not team_data:
+                raise HTTPException(status_code=404, detail="Team not found")
+            
+            if user_id not in team_data.get("members", []):
+                raise HTTPException(status_code=403, detail="Access denied: You are not a member of this team")
+            
+            # Add all team members to shared_with if not specified
+            if not shared_with_list:
+                shared_with_list = [member for member in team_data.get("members", []) if member != user_id]
+        
         # Create shared file record
         shared_file = SharedFile(
             filename=f"shared_{file.filename}",
             original_name=file.filename,
             file_path=file_path,
             shared_by=user_id,
-            shared_with=shared_with.split(",") if shared_with else [],
+            shared_with=shared_with_list,
+            team_id=team_id if team_id else None,
             file_type=mimetypes.guess_type(file.filename)[0] or "application/octet-stream",
-            file_size=0,  # Would be calculated in real implementation
+            file_size=file_size,
+            description=description,
+            tags=tag_list,
             access_level=access_level
         )
         
+        # Convert to dict and ensure proper serialization
+        shared_file_dict = shared_file.dict()
+        if 'created_at' in shared_file_dict:
+            shared_file_dict['created_at'] = shared_file_dict['created_at'].isoformat()
+        shared_file_dict.pop('_id', None)
+        
         # Save to shared directory
         shared_path = await file_manager.save_shared_file(file_path, shared_file)
-        shared_file.file_path = shared_path
+        shared_file_dict['file_path'] = shared_path
         
         # Store in database
-        await db.shared_files.insert_one(shared_file.dict())
+        await db.shared_files.insert_one(shared_file_dict)
         
         # Create notifications for recipients
         for recipient_id in shared_file.shared_with:
@@ -1104,14 +1340,30 @@ async def share_file(
                 user_id=recipient_id,
                 type="file",
                 title="New File Shared",
-                message=f"File '{file.filename}' has been shared with you"
+                message=f"File '{file.filename}' has been shared with you by {user_id}"
             )
-            await db.notifications.insert_one(notification.dict())
+            notification_dict = notification.dict()
+            if 'created_at' in notification_dict:
+                notification_dict['created_at'] = notification_dict['created_at'].isoformat()
+            notification_dict.pop('_id', None)
+            await db.notifications.insert_one(notification_dict)
         
-        await log_audit_event(user_id, "SHARE", "FILE", {"filename": file.filename, "recipients": len(shared_file.shared_with)})
+        await log_audit_event(user_id, "SHARE", "FILE", {
+            "filename": file.filename,
+            "recipients": len(shared_file.shared_with),
+            "team_id": team_id,
+            "access_level": access_level
+        })
         
-        return {"message": "File shared successfully", "file_id": shared_file.id}
+        return {
+            "message": "File shared successfully",
+            "file_id": shared_file.id,
+            "shared_with": len(shared_file.shared_with),
+            "team_context": bool(team_id)
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"File sharing failed: {e}")
         raise HTTPException(status_code=500, detail="File sharing failed")
