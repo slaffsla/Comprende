@@ -1231,7 +1231,7 @@ function App() {
                     <div className="pt-4 border-t">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:text-gray-900 font-medium shadow-sm"
                         onClick={() => {
                           const defaultSettings = {
                             voiceInputEnabled: true,
