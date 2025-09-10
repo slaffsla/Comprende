@@ -43,7 +43,8 @@ class WebRTCWebSocketTester:
         ws_endpoint = f"{self.ws_url}/ws/{user_id}"
         
         try:
-            async with websockets.connect(ws_endpoint, timeout=10) as websocket:
+            # Use asyncio.wait_for for timeout control
+            async with asyncio.wait_for(websockets.connect(ws_endpoint), timeout=10) as websocket:
                 # Test connection is established
                 self.log_test_result(
                     "WebSocket Connection Establishment",
