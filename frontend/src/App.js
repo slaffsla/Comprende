@@ -429,6 +429,12 @@ function App() {
   };
 
   const startVoiceRecognition = () => {
+    // Check if voice input is enabled in settings
+    if (!settings.voiceInputEnabled) {
+      toast.error("Voice input is disabled in settings");
+      return;
+    }
+
     // Check for browser support
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       toast.error("Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.");
@@ -448,7 +454,8 @@ function App() {
 
     recognition.onstart = () => {
       setIsListening(true);
-      toast.success(`Listening in ${LANGUAGES[sourceLang] || 'English'}...`);
+      const langName = sourceLang === 'auto' ? 'Auto-detect' : (LANGUAGES[sourceLang] || 'English');
+      toast.success(`🎤 Listening in ${langName}...`);
     };
 
     recognition.onresult = (event) => {
@@ -468,7 +475,7 @@ function App() {
       if (finalTranscript) {
         setSourceText(prev => prev + finalTranscript);
         setIsListening(false);
-        toast.success("Voice input captured successfully");
+        toast.success(`✅ Voice captured: "${finalTranscript.substring(0, 50)}${finalTranscript.length > 50 ? '...' : ''}"`);
         
         // Auto-translate if enabled
         if (settings.autoTranslateVoice) {
@@ -484,22 +491,28 @@ function App() {
       let errorMessage = "Speech recognition error";
       switch (event.error) {
         case 'no-speech':
-          errorMessage = "No speech detected. Please try again.";
+          errorMessage = "No speech detected. Please try speaking again.";
           break;
         case 'audio-capture':
-          errorMessage = "No microphone found. Please check your microphone.";
+          errorMessage = "Microphone not found. Please check your microphone connection.";
           break;
         case 'not-allowed':
-          errorMessage = "Microphone permission denied. Please allow microphone access.";
+          errorMessage = "Microphone permission denied. Please allow microphone access in your browser settings.";
           break;
         case 'network':
-          errorMessage = "Network error. Please check your internet connection.";
+          errorMessage = "Network error occurred. Please check your internet connection and try again.";
           break;
         case 'language-not-supported':
-          errorMessage = `Language not supported for voice recognition. Falling back to English.`;
+          errorMessage = `Language not supported for voice recognition. Switching to English.`;
+          break;
+        case 'service-not-allowed':
+          errorMessage = "Speech recognition service not allowed. Please check browser permissions.";
+          break;
+        case 'bad-grammar':
+          errorMessage = "Speech recognition grammar error. Please try again.";
           break;
         default:
-          errorMessage = `Speech recognition error: ${event.error}`;
+          errorMessage = `Speech recognition error: ${event.error}. Please try again.`;
       }
       
       toast.error(errorMessage);
@@ -514,7 +527,7 @@ function App() {
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
       setIsListening(false);
-      toast.error("Failed to start voice recognition. Please try again.");
+      toast.error("Failed to start voice recognition. Please ensure microphone permissions are granted and try again.");
     }
   };
 
