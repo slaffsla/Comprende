@@ -1221,12 +1221,21 @@ function App() {
                           dir={sourceLang === 'heb' || sourceLang === 'ara' ? 'rtl' : 'ltr'}
                         />
                         <Button
-                          variant="ghost"
+                          variant={isListening ? "destructive" : "ghost"}
                           size="sm"
-                          className={`absolute bottom-2 right-2 ${isListening ? 'text-red-500' : ''}`}
+                          className={`absolute bottom-2 right-2 h-8 w-8 p-0 ${
+                            isListening 
+                              ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                              : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                          }`}
                           onClick={toggleVoiceInput}
+                          title={isListening ? "Stop listening" : "Start voice input"}
                         >
-                          {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                          {isListening ? (
+                            <MicOff className="h-4 w-4" />
+                          ) : (
+                            <Mic className="h-4 w-4 text-blue-600" />
+                          )}
                         </Button>
                       </div>
 
