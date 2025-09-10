@@ -989,24 +989,21 @@ function App() {
   const createMeeting = async () => {
     try {
       setIsLoading(true);
-      const meetingId = `meeting-${Date.now()}`;
       
-      // Generate shareable meeting link
-      const meetingLink = `${window.location.origin}/meeting/${meetingId}`;
-      
-      // Create meeting in backend first
+      // Create meeting in backend first - let backend generate the ID
       const response = await axios.post(`${BACKEND_URL}/api/meetings`, {
         name: "Translation Meeting",
-        participants: [currentUser?.name || "demo-user"],
-        link: meetingLink,
-        created_by: currentUser?.id || "demo-user"
+        participants: [currentUser?.name || "demo-user"]
       });
       
       if (response.data) {
+        const meetingId = response.data.id;
+        const meetingLink = `${window.location.origin}/meeting/${meetingId}`;
+        
         const newMeeting = {
-          id: response.data.id || meetingId,
-          name: response.data.name || "Translation Meeting",
-          participants: response.data.participants || [currentUser?.name || "demo-user"],
+          id: meetingId,
+          name: response.data.name,
+          participants: response.data.participants,
           createdAt: new Date(),
           status: "active",
           link: meetingLink,
@@ -1021,12 +1018,8 @@ function App() {
         // Switch to collaborate tab to show the meeting
         setActiveTab("collaborate");
         
-        toast.success(`🎥 Meeting created! Link copied to clipboard. Share: ${meetingLink}`);
+        toast.success(`🎥 Meeting created! Link copied to clipboard.`);
         
-        // Auto-initialize WebRTC after a short delay
-        setTimeout(() => {
-          initializeWebRTC(newMeeting.id);
-        }, 1000);
       }
       
     } catch (error) {
