@@ -410,6 +410,8 @@ function App() {
       toast.info("Downloaded as text file (original format conversion failed)");
     }
   };
+
+  const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem('comprende-user');
     // Clear any active meetings/streams
