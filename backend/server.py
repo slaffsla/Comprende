@@ -952,30 +952,55 @@ async def download_document_content(request: dict):
         filename = request.get('filename', 'document.txt')
         
         if not content:
-            raise HTTPException(status_code=400, detail="No content provided")
+            raise HTTPException(status_code=400, detail="No content provided for download")
         
         # Create a temporary file
         temp_dir = Path("/tmp/comprende_downloads")
-        temp_dir.mkdir(exist_ok=True)
+        temp_dir.mkdir(exist_ok=True, parents=True)
         
         file_id = str(uuid.uuid4())
         temp_file_path = temp_dir / f"{file_id}_{filename}"
         
-        # Write content to temporary file
+        # Write content to temporary file with proper encoding
         async with aiofiles.open(temp_file_path, 'w', encoding='utf-8') as f:
             await f.write(content)
         
-        # Return file response
-        return FileResponse(
+        # Verify file was written correctly
+        if not temp_file_path.exists():
+            raise HTTPException(status_code=500, detail="Failed to create download file")
+        
+        # Schedule cleanup after response
+        def cleanup_file():
+            try:
+                if temp_file_path.exists():
+                    temp_file_path.unlink()
+            except Exception as e:
+                logger.warning(f"Failed to cleanup temp file: {e}")
+        
+        # Return file response with proper headers
+        response = FileResponse(
             path=str(temp_file_path),
             filename=filename,
-            media_type='text/plain',
-            background=BackgroundTasks()  # This will clean up the file after sending
+            media_type='text/plain; charset=utf-8',
+            headers={
+                "Content-Disposition": f"attachment; filename=\"{filename}\"",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
         )
         
+        # Schedule cleanup for after the file is sent
+        import threading
+        threading.Timer(5.0, cleanup_file).start()
+        
+        return response
+        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Document download error: {e}")
-        raise HTTPException(status_code=500, detail="Download failed")
+        raise HTTPException(status_code=500, detail=f"Download failed: {str(e)}")
 
 @api_router.get("/files/download/{file_id}")
 async def download_shared_file(file_id: str, user_id: str = "demo-user"):
