@@ -2462,144 +2462,264 @@ function App() {
           {/* Collaborate Tab */}
           <TabsContent value="collaborate" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Collaboration Area */}
+              {/* Teams Management Area */}
               <div className="lg:col-span-2 space-y-6">
+                
+                {/* Teams Overview */}
                 <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-slate-800">
                       <Users className="h-5 w-5 text-blue-600" />
-                      <span>Team Collaboration</span>
+                      <span>My Teams</span>
                     </CardTitle>
                     <CardDescription>
-                      Real-time communication with live translation
+                      Collaborate with your teams and share files securely
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-4">
-                      <Button onClick={createMeeting} className="bg-green-600 hover:bg-green-700">
+                      <Button onClick={() => setShowTeamCreator(true)} className="bg-blue-600 hover:bg-blue-700">
                         <Plus className="h-4 w-4 mr-2" />
-                        Start New Meeting
+                        Create Team
                       </Button>
-                      <Button variant="outline">
-                        <Search className="h-4 w-4 mr-2" />
-                        Join Meeting
+                      <Button variant="outline" onClick={() => setShowTeamJoiner(true)}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Join Team
                       </Button>
                     </div>
 
-                    {/* Active Meetings with Video Interface */}
-                    {meetings.length > 0 && (
+                    {/* Teams List */}
+                    {teams.length > 0 ? (
                       <div className="space-y-3">
-                        <h3 className="font-semibold">Active Meetings</h3>
-                        {meetings.map(meeting => (
-                          <div key={meeting.id} className="p-4 border rounded-lg">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h4 className="font-medium">{meeting.name}</h4>
-                                <p className="text-sm text-gray-500">
-                                  {meeting.participants?.length || 0} participants
-                                </p>
-                                {meeting.link && (
-                                  <div className="mt-2">
-                                    <p className="text-xs text-blue-600 font-mono bg-blue-50 px-2 py-1 rounded">
-                                      {meeting.link}
-                                    </p>
-                                  </div>
+                        <h3 className="font-semibold">Your Teams ({teams.length})</h3>
+                        {teams.map(team => (
+                          <div key={team.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-lg">{team.name}</h4>
+                                {team.description && (
+                                  <p className="text-sm text-gray-600 mt-1">{team.description}</p>
                                 )}
+                                <div className="flex items-center space-x-4 mt-2">
+                                  <span className="text-sm text-gray-500">
+                                    👥 {team.members?.length || 0} members
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    📅 Created {new Date(team.created_at).toLocaleDateString()}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    Code: {team.invite_code}
+                                  </Badge>
+                                </div>
                               </div>
-                              <div className="flex flex-col space-y-2">
+                              <div className="flex space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => copyToClipboard(team.invite_code)}
+                                  title="Copy invite code"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setCurrentTeam(team);
+                                    setSelectedTeamForFiles(team.id);
+                                    loadTeamFiles(team.id);
+                                  }}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <FolderOpen className="h-4 w-4 mr-1" />
+                                  View Files
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500">
+                        <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <h3 className="font-medium mb-2">No teams yet</h3>
+                        <p className="text-sm mb-4">Create a team to start collaborating with others</p>
+                        <Button onClick={() => setShowTeamCreator(true)} className="bg-blue-600 hover:bg-blue-700">
+                          Create Your First Team
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Team Files Area */}
+                {currentTeam && (
+                  <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2 text-slate-800">
+                        <FolderOpen className="h-5 w-5 text-green-600" />
+                        <span>{currentTeam.name} - Files</span>
+                      </CardTitle>
+                      <CardDescription>
+                        Shared files and documents for team collaboration
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex space-x-4">
+                        <Button 
+                          onClick={() => setShowFileUpload(true)} 
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload File
+                        </Button>
+                        <Button variant="outline" onClick={() => loadTeamFiles(currentTeam.id)}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
+
+                      {/* Team Files List */}
+                      {teamFiles.length > 0 ? (
+                        <div className="space-y-3">
+                          <h3 className="font-semibold">Team Files ({teamFiles.length})</h3>
+                          {teamFiles.map(file => (
+                            <div key={file.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2">
+                                    <FileText className="h-4 w-4 text-blue-600" />
+                                    <span className="font-medium">{file.original_name}</span>
+                                    <Badge variant="outline" className="text-xs">
+                                      {file.file_type}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+                                    <span>👤 {file.uploaded_by}</span>
+                                    <span>📅 {new Date(file.created_at).toLocaleDateString()}</span>
+                                    <span>📏 {(file.file_size / 1024).toFixed(1)} KB</span>
+                                  </div>
+                                  {file.description && (
+                                    <p className="text-sm text-gray-600 mt-1">{file.description}</p>
+                                  )}
+                                  {file.tags && file.tags.length > 0 && (
+                                    <div className="flex space-x-1 mt-1">
+                                      {file.tags.map(tag => (
+                                        <Badge key={tag} variant="secondary" className="text-xs">
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                                 <div className="flex space-x-2">
-                                  {/* Only show Join Video button if not already in a video call */}
-                                  {!localStream ? (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => downloadTeamFile(currentTeam.id, file.id, file.original_name)}
+                                    title="Download file"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                  {(file.uploaded_by === (currentUser?.id || "demo-user") || 
+                                    currentTeam.created_by === (currentUser?.id || "demo-user")) && (
                                     <Button 
                                       size="sm" 
-                                      onClick={() => joinMeeting(meeting.id)}
-                                      disabled={isLoading}
-                                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+                                      variant="outline"
+                                      onClick={() => deleteTeamFile(currentTeam.id, file.id, file.original_name)}
+                                      className="text-red-600 hover:text-red-700"
+                                      title="Delete file"
                                     >
-                                      {isLoading ? (
-                                        <span className="flex items-center">
-                                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                                          <span className="text-white font-medium">Connecting...</span>
-                                        </span>
-                                      ) : (
-                                        <>
-                                          <Video className="h-4 w-4 mr-1 text-white" />
-                                          <span className="text-white font-medium">Join Video</span>
-                                        </>
-                                      )}
-                                    </Button>
-                                  ) : (
-                                    <Button 
-                                      size="sm" 
-                                      className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm cursor-default"
-                                      disabled={true}
-                                    >
-                                      <Video className="h-4 w-4 mr-1 text-white" />
-                                      <span className="text-white font-medium">In Video Call</span>
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   )}
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    title="Copy meeting link to share"
-                                    onClick={() => shareMeetingLink(meeting)}
-                                    className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 font-medium shadow-sm"
-                                  >
-                                    <Share className="h-4 w-4 text-blue-700 mr-1" />
-                                    <span className="text-blue-700 font-medium">Copy Link</span>
-                                  </Button>
-                                </div>
-                                {/* File sharing for meeting */}
-                                <div className="flex space-x-2">
-                                  <input
-                                    type="file"
-                                    id={`file-share-${meeting.id}`}
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files[0];
-                                      if (file) {
-                                        shareFileInMeeting(meeting.id, file);
-                                      }
-                                    }}
-                                  />
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => document.getElementById(`file-share-${meeting.id}`).click()}
-                                    className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm text-xs"
-                                  >
-                                    <Upload className="h-3 w-3 mr-1 text-gray-700" />
-                                    <span className="text-gray-900 font-medium">Share File</span>
-                                  </Button>
                                 </div>
                               </div>
                             </div>
-                            
-                            {/* Shared Files in Meeting */}
-                            {meeting.files && meeting.files.length > 0 && (
-                              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                <h5 className="text-sm font-medium mb-2">📎 Shared Files ({meeting.files.length})</h5>
-                                <div className="space-y-1">
-                                  {meeting.files.map((file, index) => (
-                                    <div key={index} className="flex items-center justify-between text-xs">
-                                      <span className="text-gray-700">{file.name}</span>
-                                      <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        className="h-6 px-2 text-blue-600 hover:text-blue-800"
-                                        onClick={() => {
-                                          // In a real implementation, this would download the shared file
-                                          toast.info(`Downloading ${file.name}...`);
-                                        }}
-                                      >
-                                        <Download className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <FileText className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                          <h4 className="font-medium mb-2">No files yet</h4>
+                          <p className="text-sm">Upload files to share with your team</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
+                {/* Traditional Meeting Section (condensed) */}
+                <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2 text-slate-800">
+                      <Video className="h-5 w-5 text-purple-600" />
+                      <span>Video Meetings</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex space-x-4">
+                      <Button onClick={createMeeting} className="bg-purple-600 hover:bg-purple-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Start Meeting
+                      </Button>
+                    </div>
+
+                    {/* Active Meetings (condensed) */}
+                    {meetings.length > 0 && (
+                      <div className="space-y-3">
+                        {meetings.map(meeting => (
+                          <div key={meeting.id} className="p-3 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium">{meeting.name}</h4>
+                                <p className="text-sm text-gray-500">
+                                  Meeting ID: {meeting.id}
+                                </p>
+                              </div>
+                              <div className="flex space-x-2">
+                                {/* Only show Join Video button if not already in video call */}
+                                {!localStream ? (
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => joinMeeting(meeting.id)}
+                                    disabled={isLoading}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
+                                  >
+                                    {isLoading ? (
+                                      <span className="flex items-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                        <span className="text-white font-medium">Connecting...</span>
+                                      </span>
+                                    ) : (
+                                      <>
+                                        <Video className="h-4 w-4 mr-1 text-white" />
+                                        <span className="text-white font-medium">Join Video</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    size="sm" 
+                                    className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm cursor-default"
+                                    disabled={true}
+                                  >
+                                    <Video className="h-4 w-4 mr-1 text-white" />
+                                    <span className="text-white font-medium">In Video Call</span>
+                                  </Button>
+                                )}
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  title="Copy meeting link to share"
+                                  onClick={() => shareMeetingLink(meeting)}
+                                  className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 font-medium shadow-sm"
+                                >
+                                  <Share className="h-4 w-4 text-blue-700 mr-1" />
+                                  <span className="text-blue-700 font-medium">Copy Link</span>
+                                </Button>
+                              </div>
+                            </div>
+                            
                             {/* Video Interface */}
                             {localStream && (
                               <div className="mt-4 p-4 bg-gray-900 rounded-lg">
@@ -2655,7 +2775,7 @@ function App() {
                                     className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
                                   >
                                     <Mic className="h-4 w-4 text-gray-700" />
-                                    <span className="text-sm text-gray-900 font-medium">Mute</span>
+                                    <span>Mute</span>
                                   </Button>
                                   <Button 
                                     variant="outline" 
@@ -2663,50 +2783,20 @@ function App() {
                                     className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
                                   >
                                     <Video className="h-4 w-4 text-gray-700" />
-                                    <span className="text-sm text-gray-900 font-medium">Camera</span>
-                                  </Button>
-                                  <Button 
-                                    variant="destructive" 
-                                    size="sm"
-                                    onClick={leaveMeeting}
-                                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium shadow-sm"
-                                  >
-                                    <PhoneOff className="h-4 w-4 text-white" />
-                                    <span className="text-sm text-white font-medium">Leave</span>
+                                    <span>Camera</span>
                                   </Button>
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
-                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
+                                    onClick={leaveMeeting}
+                                    className="flex items-center space-x-2 bg-red-50 border-red-300 text-red-700 hover:bg-red-100 font-medium shadow-sm"
                                   >
-                                    <Share className="h-4 w-4 text-gray-700" />
-                                    <span className="text-sm text-gray-900 font-medium">Share Screen</span>
+                                    <PhoneOff className="h-4 w-4 text-red-700" />
+                                    <span>Leave</span>
                                   </Button>
                                 </div>
                               </div>
                             )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Shared Files */}
-                    {sharedFiles.length > 0 && (
-                      <div className="space-y-3">
-                        <h3 className="font-semibold">Shared Files</h3>
-                        {sharedFiles.map(file => (
-                          <div key={file.id} className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium">{file.name}</p>
-                                <p className="text-sm text-gray-500">
-                                  Shared by {file.sharedBy}
-                                </p>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </div>
                         ))}
                       </div>
