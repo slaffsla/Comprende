@@ -792,8 +792,16 @@ function App() {
             
             <div className="flex items-center space-x-2 sm:space-x-4">
               {healthStatus?.status && (
-                <Badge variant={healthStatus.status === "healthy" ? "default" : "destructive"} className="text-xs hidden sm:inline-flex">
-                  {healthStatus.status}
+                <Badge 
+                  variant={healthStatus.status === "healthy" ? "default" : "destructive"} 
+                  className="text-xs hidden sm:inline-flex bg-green-100 text-green-800 border-green-300"
+                >
+                  <div className="flex items-center space-x-1">
+                    <div className={`w-2 h-2 rounded-full ${
+                      healthStatus.status === "healthy" ? "bg-green-500" : "bg-red-500"
+                    }`}></div>
+                    <span>{healthStatus.status}</span>
+                  </div>
                 </Badge>
               )}
               
