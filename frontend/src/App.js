@@ -141,7 +141,16 @@ function App() {
   const [healthStatus, setHealthStatus] = useState(null);
   const [detectedLanguage, setDetectedLanguage] = useState(null);
   const [users, setUsers] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  // User authentication state
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('comprende-user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      return null;
+    }
+  });
+  const [showLogin, setShowLogin] = useState(!currentUser);
   const [meetings, setMeetings] = useState([]);
   const [sharedFiles, setSharedFiles] = useState([]);
   const [localStream, setLocalStream] = useState(null);
