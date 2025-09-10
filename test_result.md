@@ -270,7 +270,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Language Detection Accuracy"
+    - "Translation History and Audit Logs"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
