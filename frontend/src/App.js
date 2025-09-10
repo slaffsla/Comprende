@@ -214,11 +214,18 @@ function App() {
         preferred_languages: [targetLang, sourceLang]
       });
       
+      // Generate Gravatar URL if no custom avatar
+      let avatarUrl = userData.avatar;
+      if (!avatarUrl || avatarUrl === "👤") {
+        const emailHash = await generateGravatarHash(userData.email);
+        avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=40`;
+      }
+      
       const user = {
         id: response.data.id,
         name: userData.name,
         email: userData.email,
-        avatar: userData.avatar || "👤",
+        avatar: avatarUrl,
         joinedAt: new Date().toISOString()
       };
       
@@ -228,15 +235,60 @@ function App() {
     } catch (error) {
       console.error('Login failed:', error);
       // Fallback to local user creation
+      let avatarUrl = userData.avatar;
+      if (!avatarUrl || avatarUrl === "👤") {
+        const emailHash = await generateGravatarHash(userData.email);
+        avatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=40`;
+      }
+      
       const user = {
         id: `user-${Date.now()}`,
         name: userData.name,
         email: userData.email,
-        avatar: userData.avatar || "👤",
+        avatar: avatarUrl,
         joinedAt: new Date().toISOString()
       };
       setCurrentUser(user);
       toast.success(`Welcome, ${user.name}! (Local session)`);
+    }
+  };
+
+  const generateGravatarHash = async (email) => {
+    const trimmedEmail = email.toLowerCase().trim();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(trimmedEmail);
+    const hashBuffer = await crypto.subtle.digest('MD5', data).catch(() => {
+      // Fallback if MD5 not available
+      let hash = 0;
+      for (let i = 0; i < trimmedEmail.length; i++) {
+        const char = trimmedEmail.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return hash.toString(16);
+    });
+    
+    if (typeof hashBuffer === 'string') return hashBuffer;
+    
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const handleAvatarUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        toast.error("Avatar image must be smaller than 1MB");
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newUser = { ...currentUser, avatar: e.target.result };
+        setCurrentUser(newUser);
+        toast.success("Avatar updated successfully!");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
