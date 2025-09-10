@@ -467,7 +467,14 @@ function App() {
 
       if (response.data && response.data.translated_text) {
         setTranslatedText(response.data.translated_text);
-        setDetectedLanguage(response.data.source_language);
+        if (response.data.source_language) {
+          setDetectedLanguage(response.data.source_language);
+          // If using auto-detect, update the source language for better UX
+          if (sourceLang === 'auto') {
+            // Only update display, don't change the actual sourceLang value
+            setDetectedLanguage(response.data.source_language);
+          }
+        }
         toast.success(`Translation completed with ${(response.data.confidence * 100).toFixed(1)}% confidence`);
         loadTranslationHistory();
       } else {
