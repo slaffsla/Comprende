@@ -1103,11 +1103,11 @@ function App() {
     }
   };
 
-  const createTeam = async (teamName) => {
+  const createTeam = async (teamName, teamDescription = "") => {
     try {
       const response = await axios.post(`${BACKEND_URL}/api/teams`, {
         name: teamName,
-        created_by: currentUser?.id || "demo-user"
+        description: teamDescription
       });
       
       if (response.data) {
@@ -1117,10 +1117,112 @@ function App() {
         
         // Copy invite code to clipboard
         await copyToClipboard(response.data.invite_code);
+        setShowTeamCreator(false);
       }
     } catch (error) {
       console.error('Failed to create team:', error);
       toast.error("Failed to create team");
+    }
+  };
+
+  // Load user teams
+  const loadUserTeams = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/teams`, {
+        params: { user_id: currentUser?.id || "demo-user" }
+      });
+      if (response.data) {
+        setTeams(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load teams:', error);
+    }
+  };
+
+  // Upload file to team
+  const uploadTeamFile = async (teamId, file, description = "", tags = "") => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('description', description);
+      formData.append('tags', tags);
+      formData.append('user_id', currentUser?.id || "demo-user");
+
+      const response = await axios.post(`${BACKEND_URL}/api/teams/${teamId}/files/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data) {
+        toast.success(`✅ File "${file.name}" uploaded to team successfully!`);
+        // Reload team files
+        await loadTeamFiles(teamId);
+        setShowFileUpload(false);
+      }
+    } catch (error) {
+      console.error('Failed to upload team file:', error);
+      toast.error("Failed to upload file to team");
+    }
+  };
+
+  // Load team files
+  const loadTeamFiles = async (teamId) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/teams/${teamId}/files`, {
+        params: { user_id: currentUser?.id || "demo-user" }
+      });
+      if (response.data) {
+        setTeamFiles(response.data.files);
+      }
+    } catch (error) {
+      console.error('Failed to load team files:', error);
+      toast.error("Failed to load team files");
+    }
+  };
+
+  // Download team file
+  const downloadTeamFile = async (teamId, fileId, filename) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/teams/${teamId}/files/${fileId}/download`, {
+        params: { user_id: currentUser?.id || "demo-user" },
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`📁 Downloaded: ${filename}`);
+    } catch (error) {
+      console.error('Failed to download team file:', error);
+      toast.error("Failed to download file");
+    }
+  };
+
+  // Delete team file
+  const deleteTeamFile = async (teamId, fileId, filename) => {
+    if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${BACKEND_URL}/api/teams/${teamId}/files/${fileId}`, {
+        params: { user_id: currentUser?.id || "demo-user" }
+      });
+
+      toast.success(`🗑️ Deleted: ${filename}`);
+      // Reload team files
+      await loadTeamFiles(teamId);
+    } catch (error) {
+      console.error('Failed to delete team file:', error);
+      toast.error("Failed to delete file");
     }
   };
 
