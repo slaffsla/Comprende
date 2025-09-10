@@ -361,7 +361,55 @@ function App() {
     }
   };
 
-  const logoutUser = () => {
+  const downloadFileFormatted = async (content, filename, originalFormat = 'txt') => {
+    try {
+      // Detect browser type for better error handling
+      const isBrave = navigator.brave && await navigator.brave.isBrave();
+      
+      // Use backend formatted download endpoint
+      const response = await axios.post(`${BACKEND_URL}/api/documents/download-formatted`, {
+        content: content,
+        filename: filename,
+        format: originalFormat
+      }, {
+        responseType: 'blob'
+      });
+
+      // Create download link from blob response
+      const blob = new Blob([response.data]);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      
+      // For better browser compatibility
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      // Success message with format info
+      const formatName = originalFormat.toUpperCase();
+      if (isBrave) {
+        toast.success(`📁 ${formatName} file download started! Check Brave's download icon if not visible.`, { duration: 5000 });
+      } else {
+        toast.success(`📁 ${formatName} file "${filename}" downloaded in original format!`);
+      }
+      
+    } catch (error) {
+      console.error('Formatted download failed:', error);
+      // Fallback to regular text download
+      await downloadFile(content, filename.replace(/\.(pdf|xlsx|xls)$/i, '.txt'));
+      toast.info("Downloaded as text file (original format conversion failed)");
+    }
+  };
     setCurrentUser(null);
     localStorage.removeItem('comprende-user');
     // Clear any active meetings/streams
