@@ -1465,86 +1465,93 @@ function App() {
       {/* Main App Content - Only show when logged in */}
       {!showLogin && currentUser && (
         <>
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-md shadow-sm">
-        <div className="container mx-auto px-4 py-3">
+      {/* Enhanced Header with Modern Design */}
+      <header className="sticky top-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-b border-[var(--color-border)]">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
+            {/* Logo and Brand */}
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center shadow-lg">
                 <Globe className="h-6 w-6 text-white" />
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Comprende</h1>
-                <p className="text-xs sm:text-sm text-gray-600">Universal Communication Platform</p>
-              </div>
-              <div className="sm:hidden">
-                <h1 className="text-lg font-bold text-gray-900">Comprende</h1>
+              <div>
+                <h1 className="text-heading-3 font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] bg-clip-text text-transparent">
+                  Comprende
+                </h1>
+                <p className="text-caption text-[var(--color-text-tertiary)]">AI-Powered Collaboration</p>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-4">
+
+            {/* Navigation and User Actions */}
+            <div className="flex items-center space-x-4">
+              {/* System Health Status */}
               {healthStatus?.status && (
-                <Badge 
-                  variant={healthStatus.status === "healthy" ? "default" : "destructive"} 
-                  className="text-xs hidden sm:inline-flex bg-green-100 text-green-800 border-green-300 font-medium shadow-sm"
-                >
-                  <div className="flex items-center space-x-1">
-                    <div className={`w-2 h-2 rounded-full ${
-                      healthStatus.status === "healthy" ? "bg-green-500" : "bg-red-500"
-                    }`}></div>
-                    <span className="text-green-800 font-medium">System {healthStatus.status}</span>
-                  </div>
-                </Badge>
+                <div className={`status-indicator ${healthStatus.status === 'healthy' ? 'status-healthy' : 'status-error'}`}>
+                  <div className={`status-dot ${healthStatus.status === 'healthy' ? 'healthy' : 'error'}`}></div>
+                  <span className="text-caption">System {healthStatus.status}</span>
+                </div>
               )}
-              
+
+              {/* Notifications */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative bg-white hover:bg-gray-100 border border-gray-200 shadow-sm">
-                    <Bell className="h-4 w-4 text-gray-700" />
+                  <Button variant="ghost" size="sm" className="relative btn-secondary">
+                    <Bell className="h-4 w-4" />
                     {notifications.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      <span className="absolute -top-1 -right-1 bg-[var(--color-danger)] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                         {notifications.length}
                       </span>
                     )}
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="card-modern">
                   <DialogHeader>
-                    <DialogTitle>Notifications</DialogTitle>
+                    <DialogTitle className="text-heading-3">Notifications</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3">
                     {notifications.length > 0 ? (
                       <>
                         {notifications.map(notification => (
-                          <div key={notification.id} className="p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm">{notification.message}</p>
-                            <p className="text-xs text-gray-500">{notification.time}</p>
+                          <div key={notification.id} className="file-card">
+                            <p className="text-body-small">{notification.message}</p>
+                            <p className="text-caption mt-1">{notification.created_at}</p>
                           </div>
                         ))}
-                        <Button onClick={clearNotifications} variant="outline" className="w-full">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setNotifications([])}
+                          className="w-full btn-secondary"
+                        >
                           Clear All
                         </Button>
                       </>
                     ) : (
-                      <p className="text-gray-500 text-center">No notifications</p>
+                      <div className="empty-state">
+                        <div className="empty-state-icon">
+                          <Bell className="h-6 w-6" />
+                        </div>
+                        <p className="text-body-small">No notifications</p>
+                      </div>
                     )}
                   </div>
                 </DialogContent>
               </Dialog>
 
+              {/* Settings */}
               <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="btn-secondary">
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="card-modern">
                   <DialogHeader>
-                    <DialogTitle>Settings</DialogTitle>
+                    <DialogTitle className="text-heading-3">Settings</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Default Source Language</label>
+                      <label className="text-body-small font-medium">Default Source Language</label>
                       <Select 
                         value={settings.defaultSourceLang} 
                         onValueChange={(value) => {
@@ -1552,7 +1559,7 @@ function App() {
                           setSourceLang(value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="input-field">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1564,7 +1571,7 @@ function App() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Default Target Language</label>
+                      <label className="text-body-small font-medium">Default Target Language</label>
                       <Select 
                         value={settings.defaultTargetLang}
                         onValueChange={(value) => {
@@ -1572,7 +1579,7 @@ function App() {
                           setTargetLang(value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="input-field">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1583,41 +1590,41 @@ function App() {
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-900">Voice Settings</label>
+                      <label className="text-body-small font-medium">Voice Settings</label>
                       <div className="space-y-3 mt-3">
                         <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
                             checked={settings.voiceInputEnabled}
                             onChange={(e) => setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}))}
                           />
-                          <span className="text-sm font-medium text-gray-900">Enable voice input</span>
+                          <span className="text-body-small font-medium">Enable voice input</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
                             checked={settings.voiceOutputEnabled}
                             onChange={(e) => setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}))}
                           />
-                          <span className="text-sm font-medium text-gray-900">Enable voice output</span>
+                          <span className="text-body-small font-medium">Enable voice output</span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input 
                             type="checkbox" 
-                            className="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
+                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
                             checked={settings.autoTranslateVoice}
                             onChange={(e) => setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}))}
                           />
-                          <span className="text-sm font-medium text-gray-900">Auto-translate voice input</span>
+                          <span className="text-body-small font-medium">Auto-translate voice input</span>
                         </label>
                       </div>
                     </div>
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t border-[var(--color-border)]">
                       <Button 
                         variant="outline" 
-                        className="w-full bg-white border-gray-300 text-gray-900 hover:bg-gray-50 hover:text-gray-900 font-medium shadow-sm"
+                        className="w-full btn-secondary"
                         onClick={() => {
                           const defaultSettings = {
                             voiceInputEnabled: true,
@@ -1639,9 +1646,10 @@ function App() {
                 </DialogContent>
               </Dialog>
 
+              {/* User Profile */}
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2 btn-secondary">
                     {currentUser.avatar && currentUser.avatar.startsWith('data:') ? (
                       <img 
                         src={currentUser.avatar} 
@@ -1659,15 +1667,15 @@ function App() {
                         }}
                       />
                     ) : (
-                      <span className="text-lg">👤</span>
+                      <User className="h-5 w-5" />
                     )}
                     <span className="text-lg" style={{display: 'none'}}>👤</span>
-                    <span className="hidden sm:inline text-sm">{currentUser.name}</span>
+                    <span className="hidden sm:inline text-body-small">{currentUser.name}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="card-modern">
                   <DialogHeader>
-                    <DialogTitle>User Profile</DialogTitle>
+                    <DialogTitle className="text-heading-3">User Profile</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
@@ -1675,41 +1683,43 @@ function App() {
                         <img 
                           src={currentUser.avatar} 
                           alt="User avatar" 
-                          className="w-12 h-12 rounded-full object-cover border"
+                          className="w-12 h-12 rounded-full object-cover border border-[var(--color-border)]"
                         />
                       ) : currentUser.avatar && currentUser.avatar.startsWith('http') ? (
                         <img 
                           src={currentUser.avatar} 
                           alt="User avatar" 
-                          className="w-12 h-12 rounded-full object-cover border"
+                          className="w-12 h-12 rounded-full object-cover border border-[var(--color-border)]"
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'inline';
                           }}
                         />
                       ) : (
-                        <span className="text-3xl">👤</span>
+                        <div className="w-12 h-12 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-full flex items-center justify-center">
+                          <User className="h-6 w-6 text-white" />
+                        </div>
                       )}
                       <span className="text-3xl" style={{display: 'none'}}>👤</span>
                       <div>
-                        <p className="font-medium">{currentUser.name}</p>
-                        <p className="text-sm text-gray-500">{currentUser.email}</p>
+                        <p className="text-body font-medium">{currentUser.name}</p>
+                        <p className="text-caption text-[var(--color-text-tertiary)]">{currentUser.email}</p>
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Update Avatar</label>
+                      <label className="text-body-small font-medium">Update Avatar</label>
                       <Input 
                         type="file" 
                         accept="image/*" 
                         onChange={handleAvatarUpload}
-                        className="mt-1"
+                        className="mt-1 input-field"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-caption text-[var(--color-text-tertiary)] mt-1">
                         Upload a new avatar image (max 1MB)
                       </p>
                     </div>
-                    <div className="pt-4 border-t">
-                      <Button onClick={logoutUser} variant="outline" className="w-full">
+                    <div className="pt-4 border-t border-[var(--color-border)]">
+                      <Button onClick={logoutUser} variant="outline" className="w-full btn-secondary">
                         Logout
                       </Button>
                     </div>
