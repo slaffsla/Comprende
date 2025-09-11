@@ -1272,36 +1272,16 @@ function App() {
       case 'user_joined':
         console.log('User joined:', data.user_id);
         setConnectedUsers(prev => [...prev.filter(u => u !== data.user_id), data.user_id]);
-        // Initiate WebRTC connection with the new user
-        await createPeerConnection(data.user_id, true);
         break;
 
       case 'user_left':
         console.log('User left:', data.user_id);
         setConnectedUsers(prev => prev.filter(u => u !== data.user_id));
-        // Clean up peer connection
-        closePeerConnection(data.user_id);
         break;
 
       case 'existing_participants':
         console.log('Existing participants:', data.participants);
         setConnectedUsers(data.participants);
-        // Create peer connections with existing users
-        for (const participantId of data.participants) {
-          await createPeerConnection(participantId, false);
-        }
-        break;
-
-      case 'webrtc_offer':
-        await handleWebRTCOffer(data.from_user, data.offer);
-        break;
-
-      case 'webrtc_answer':
-        await handleWebRTCAnswer(data.from_user, data.answer);
-        break;
-
-      case 'webrtc_ice_candidate':
-        await handleICECandidate(data.from_user, data.candidate);
         break;
 
       default:
