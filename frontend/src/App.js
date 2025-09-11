@@ -3020,6 +3020,77 @@ function App() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Members Dialog */}
+      <Dialog open={showInviteMembers} onOpenChange={setShowInviteMembers}>
+        <DialogContent className="center-dialog">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-heading-3">Invite Team Member</DialogTitle>
+            <DialogDescription className="text-body">
+              Invite someone to join "{currentTeam?.name}" team
+            </DialogDescription>
+          </DialogHeader>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              const email = formData.get('email');
+              if (email) {
+                inviteMemberToTeam(email);
+              }
+            }}
+            className="space-y-6"
+          >
+            <div>
+              <label className="form-label">Email Address</label>
+              <input 
+                name="email" 
+                type="email" 
+                placeholder="Enter team member's email" 
+                required 
+                className="enhanced-input"
+              />
+              <p className="text-caption mt-2 text-[var(--color-text-tertiary)]">
+                They'll receive an invitation and the team invite code
+              </p>
+            </div>
+            <div className="bg-[var(--color-background-secondary)] p-4 rounded-lg border border-[var(--color-border)]">
+              <p className="text-body-small font-medium mb-2">Team Invite Code:</p>
+              <div className="flex items-center space-x-2">
+                <code className="bg-[var(--color-surface)] px-3 py-2 rounded border text-[var(--color-text-primary)] font-mono text-sm tracking-wider">
+                  {currentTeam?.invite_code || "XXXXXXXX"}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => currentTeam?.invite_code && copyToClipboard(currentTeam.invite_code)}
+                  className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                  title="Copy invite code"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="text-caption mt-2 text-[var(--color-text-tertiary)]">
+                You can also share this code directly with team members
+              </p>
+            </div>
+            <div className="flex space-x-3 pt-4">
+              <button type="submit" className="flex-1 dialog-button-primary">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Send Invitation
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowInviteMembers(false)}
+                className="dialog-button-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
       </>
       )}
     </div>
