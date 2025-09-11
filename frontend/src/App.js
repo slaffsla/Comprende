@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import { toast } from "sonner";
 import {
   Calendar, Clock, Copy, Download, FileText, FolderOpen, Globe, Languages,
