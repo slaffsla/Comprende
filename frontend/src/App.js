@@ -233,6 +233,7 @@ function App() {
   const [showTeamCreator, setShowTeamCreator] = useState(false);
   const [showTeamJoiner, setShowTeamJoiner] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showInviteMembers, setShowInviteMembers] = useState(false);
   const [selectedTeamForFiles, setSelectedTeamForFiles] = useState(null);
   
   // Settings state with localStorage persistence
