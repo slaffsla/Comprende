@@ -2584,7 +2584,11 @@ function App() {
                       <div className="space-y-3">
                         <h3 className="font-semibold">Your Teams ({teams.length})</h3>
                         {teams.map(team => (
-                          <div key={team.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div 
+                            key={team.id} 
+                            className="p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                            onClick={() => openTeamDetail(team)}
+                          >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex-1">
                                 <h4 className="font-medium text-lg">{team.name}</h4>
@@ -2599,7 +2603,7 @@ function App() {
                                     📅 Created {new Date(team.created_at).toLocaleDateString()}
                                   </span>
                                   <Badge variant="outline" className="text-xs">
-                                    Code: {team.invite_code}
+                                    🔑 {team.invite_code}
                                   </Badge>
                                 </div>
                               </div>
@@ -2607,22 +2611,24 @@ function App() {
                                 <Button 
                                   size="sm" 
                                   variant="outline"
-                                  onClick={() => copyToClipboard(team.invite_code)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copyToClipboard(team.invite_code);
+                                  }}
                                   title="Copy invite code"
                                 >
                                   <Copy className="h-4 w-4" />
                                 </Button>
                                 <Button 
                                   size="sm"
-                                  onClick={() => {
-                                    setCurrentTeam(team);
-                                    setSelectedTeamForFiles(team.id);
-                                    loadTeamFiles(team.id);
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openTeamDetail(team);
                                   }}
-                                  className="bg-green-600 hover:bg-green-700"
+                                  className="bg-blue-600 hover:bg-blue-700"
                                 >
-                                  <FolderOpen className="h-4 w-4 mr-1" />
-                                  View Files
+                                  <Users className="h-4 w-4 mr-1" />
+                                  Enter Team
                                 </Button>
                               </div>
                             </div>
