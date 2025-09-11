@@ -600,18 +600,11 @@ function App() {
   };
 
   const loadUserData = () => {
-    // Set up mock team members and notifications
-    setUsers([
-      { id: "user-1", name: "Demo User", status: "online", avatar: "👤" },
-      { id: "user-2", name: "Alice Johnson", status: "online", avatar: "👩" },
-      { id: "user-3", name: "Bob Smith", status: "away", avatar: "👨" },
-      { id: "user-4", name: "Carol Davis", status: "offline", avatar: "👩‍💼" }
-    ]);
-
+    // Set up notifications - users will be loaded from real team data
     setNotifications([
-      { id: 1, type: "translation", message: "New translation request from Alice", time: "2 min ago" },
+      { id: 1, type: "translation", message: "New translation request from teammate", time: "2 min ago" },
       { id: 2, type: "meeting", message: "Team meeting starting in 15 minutes", time: "15 min ago" },
-      { id: 3, type: "file", message: "Document shared by Bob", time: "1 hour ago" }
+      { id: 3, type: "file", message: "Document shared by team member", time: "1 hour ago" }
     ]);
   };
 
