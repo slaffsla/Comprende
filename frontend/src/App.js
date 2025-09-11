@@ -19,6 +19,60 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from "sonner";
 import { Toaster } from "./components/ui/sonner";
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Suppress ResizeObserver errors
+    if (error.message && error.message.includes('ResizeObserver')) {
+      this.setState({ hasError: false });
+      return;
+    }
+    
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <div className="error-boundary-icon">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <h3 className="text-heading-3 mb-2">Something went wrong</h3>
+          <p className="text-body mb-4">
+            We're sorry, but something unexpected happened. Please try refreshing the page.
+          </p>
+          <Button 
+            onClick={() => {
+              this.setState({ hasError: false, error: null, errorInfo: null });
+              window.location.reload();
+            }}
+            className="btn-primary"
+          >
+            Refresh Page
+          </Button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
