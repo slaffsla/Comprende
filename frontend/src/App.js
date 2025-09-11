@@ -2787,10 +2787,10 @@ function App() {
 
       {/* Team Creation Dialog */}
       <Dialog open={showTeamCreator} onOpenChange={setShowTeamCreator}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Team</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="center-dialog">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-heading-3">Create New Team</DialogTitle>
+            <DialogDescription className="text-body">
               Create a team to collaborate and share files with others
             </DialogDescription>
           </DialogHeader>
@@ -2804,23 +2804,37 @@ function App() {
                 createTeam(teamName, teamDescription);
               }
             }}
-            className="space-y-4"
+            className="space-y-6"
           >
             <div>
-              <label className="text-sm font-medium">Team Name</label>
-              <Input name="teamName" type="text" placeholder="Enter team name" required />
+              <label className="form-label">Team Name</label>
+              <input 
+                name="teamName" 
+                type="text" 
+                placeholder="Enter team name" 
+                required 
+                className="enhanced-input"
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">Description (Optional)</label>
-              <Textarea name="teamDescription" placeholder="Brief description of your team" />
+              <label className="form-label">Description (Optional)</label>
+              <textarea 
+                name="teamDescription" 
+                placeholder="Brief description of your team"
+                className="enhanced-textarea"
+              />
             </div>
-            <div className="flex space-x-2">
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <div className="flex space-x-3 pt-4">
+              <button type="submit" className="flex-1 dialog-button-primary">
                 Create Team
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowTeamCreator(false)}>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowTeamCreator(false)}
+                className="dialog-button-secondary"
+              >
                 Cancel
-              </Button>
+              </button>
             </div>
           </form>
         </DialogContent>
@@ -2828,10 +2842,10 @@ function App() {
 
       {/* Team Join Dialog */}
       <Dialog open={showTeamJoiner} onOpenChange={setShowTeamJoiner}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Join Team</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="center-dialog">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-heading-3">Join Team</DialogTitle>
+            <DialogDescription className="text-body">
               Enter the invite code to join an existing team
             </DialogDescription>
           </DialogHeader>
@@ -2845,19 +2859,34 @@ function App() {
                 setShowTeamJoiner(false);
               }
             }}
-            className="space-y-4"
+            className="space-y-6"
           >
             <div>
-              <label className="text-sm font-medium">Invite Code</label>
-              <Input name="inviteCode" type="text" placeholder="Enter team invite code" required />
+              <label className="form-label">Invite Code</label>
+              <input 
+                name="inviteCode" 
+                type="text" 
+                placeholder="Enter 8-character invite code" 
+                required 
+                className="enhanced-input"
+                maxLength="8"
+                style={{letterSpacing: '2px', textTransform: 'uppercase'}}
+              />
+              <p className="text-caption mt-2 text-[var(--color-text-tertiary)]">
+                Ask your team admin for the invite code
+              </p>
             </div>
-            <div className="flex space-x-2">
-              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+            <div className="flex space-x-3 pt-4">
+              <button type="submit" className="flex-1 dialog-button-primary">
                 Join Team
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowTeamJoiner(false)}>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowTeamJoiner(false)}
+                className="dialog-button-secondary"
+              >
                 Cancel
-              </Button>
+              </button>
             </div>
           </form>
         </DialogContent>
