@@ -1403,8 +1403,8 @@ body {
   }
 }
 
-/* Complete dialog stability - no cursor-induced movements */
-[data-radix-dialog-content] {
+/* Settings dialog specific positioning */
+.settings-dialog {
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
