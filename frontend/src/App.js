@@ -1405,6 +1405,9 @@ function App() {
         // Copy invite code to clipboard for easy sharing
         await copyToClipboard(currentTeam.invite_code);
         setShowInviteMembers(false);
+        
+        // Reload team details to get updated member list if the user was immediately added
+        await loadTeamDetails(currentTeam.id);
       }
     } catch (error) {
       console.error('Failed to invite member:', error);
