@@ -1351,7 +1351,14 @@ function App() {
   // ===== FUTURE WEBRTC IMPLEMENTATION =====
   // These functions will be used when WebRTC infrastructure is ready
   
-  const initializeWebRTC = async (meetingId) => {
+  // Simplified video meeting functionality - WebRTC moved to future development
+  const joinMeeting = async (meetingId) => {
+    // Show "Coming soon" message instead of WebRTC implementation
+    toast.info("🚀 Video calling coming soon! We're working on an amazing video experience for you.", {
+      duration: 4000,
+      icon: "🎥"
+    });
+  };
     try {
       setIsLoading(true);
       setCurrentMeetingId(meetingId);
