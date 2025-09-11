@@ -1218,6 +1218,11 @@ function App() {
 
   // Load team details including members
   const loadTeamDetails = async (teamId) => {
+    if (!teamId) {
+      console.warn('loadTeamDetails called without teamId');
+      return;
+    }
+    
     try {
       const response = await axios.get(`${BACKEND_URL}/api/teams/${teamId}`, {
         params: { user_id: currentUser?.id || "demo-user" }
@@ -1226,7 +1231,8 @@ function App() {
         setCurrentTeam(response.data);
       }
     } catch (error) {
-      console.error('Failed to load team details:', error);
+      console.error('Failed to load team details:', error.response?.data || error.message || error);
+      // Don't show error toast for team details as it's not critical
     }
   };
 
