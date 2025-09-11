@@ -1521,35 +1521,42 @@ function App() {
               <div>
                 <label className="text-body-small font-medium block mb-2">Avatar</label>
                 <div className="space-y-2">
-                  <Input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        if (file.size > 1024 * 1024) {
-                          toast.error("Avatar image must be smaller than 1MB");
-                          e.target.value = '';
-                          return;
+                  <div className="avatar-file-input">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          if (file.size > 1024 * 1024) {
+                            toast.error("Avatar image must be smaller than 1MB");
+                            e.target.value = '';
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const preview = document.getElementById('avatar-preview');
+                            if (preview) {
+                              preview.src = event.target.result;
+                              preview.style.display = 'block';
+                            }
+                            // Store the data URL in a hidden input
+                            const hiddenInput = document.getElementById('avatar-data');
+                            if (hiddenInput) {
+                              hiddenInput.value = event.target.result;
+                            }
+                          };
+                          reader.readAsDataURL(file);
                         }
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          const preview = document.getElementById('avatar-preview');
-                          if (preview) {
-                            preview.src = event.target.result;
-                            preview.style.display = 'block';
-                          }
-                          // Store the data URL in a hidden input
-                          const hiddenInput = document.getElementById('avatar-data');
-                          if (hiddenInput) {
-                            hiddenInput.value = event.target.result;
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="mb-2 focus-ring"
-                  />
+                      }}
+                    />
+                    <div className="avatar-file-button">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Choose File
+                    </div>
+                  </div>
                   <input type="hidden" name="avatar" id="avatar-data" />
                   <img 
                     id="avatar-preview" 
