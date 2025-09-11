@@ -2898,4 +2898,11 @@ function App() {
   );
 }
 
-export default App;
+// Wrap App with ErrorBoundary
+const WrappedApp = () => (
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
+
+export default WrappedApp;
