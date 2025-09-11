@@ -1676,20 +1676,25 @@ function App() {
                       <label className="settings-label">Voice & Audio Settings</label>
                       <div className="voice-settings">
                         <div className="voice-setting-item">
-                          <label className="voice-setting-label">
+                          <label 
+                            className="voice-setting-label"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const newValue = !settings.voiceInputEnabled;
+                              setSettings(prev => ({...prev, voiceInputEnabled: newValue}));
+                              toast.success(`Voice input ${newValue ? 'enabled' : 'disabled'}`);
+                            }}
+                          >
                             <input 
                               type="checkbox" 
                               checked={settings.voiceInputEnabled}
-                              onChange={(e) => {
-                                setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}));
-                                toast.success(`Voice input ${e.target.checked ? 'enabled' : 'disabled'}`);
-                              }}
+                              onChange={() => {}} // Controlled by label click
                               className="sr-only"
                             />
                             <div className={`voice-setting-checkbox ${settings.voiceInputEnabled ? 'checked' : ''}`}></div>
-                            <div>
-                              <span className="text-body-small font-medium">Enable Voice Input</span>
-                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                            <div className="voice-setting-content">
+                              <span className="voice-setting-title">Enable Voice Input</span>
+                              <p className="voice-setting-description">
                                 Allow microphone access for voice translations
                               </p>
                             </div>
@@ -1697,20 +1702,25 @@ function App() {
                         </div>
 
                         <div className="voice-setting-item">
-                          <label className="voice-setting-label">
+                          <label 
+                            className="voice-setting-label"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const newValue = !settings.voiceOutputEnabled;
+                              setSettings(prev => ({...prev, voiceOutputEnabled: newValue}));
+                              toast.success(`Voice output ${newValue ? 'enabled' : 'disabled'}`);
+                            }}
+                          >
                             <input 
                               type="checkbox" 
                               checked={settings.voiceOutputEnabled}
-                              onChange={(e) => {
-                                setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}));
-                                toast.success(`Voice output ${e.target.checked ? 'enabled' : 'disabled'}`);
-                              }}
+                              onChange={() => {}} // Controlled by label click
                               className="sr-only"
                             />
                             <div className={`voice-setting-checkbox ${settings.voiceOutputEnabled ? 'checked' : ''}`}></div>
-                            <div>
-                              <span className="text-body-small font-medium">Enable Voice Output</span>
-                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                            <div className="voice-setting-content">
+                              <span className="voice-setting-title">Enable Voice Output</span>
+                              <p className="voice-setting-description">
                                 Play translated text using text-to-speech
                               </p>
                             </div>
@@ -1718,20 +1728,25 @@ function App() {
                         </div>
 
                         <div className="voice-setting-item">
-                          <label className="voice-setting-label">
+                          <label 
+                            className="voice-setting-label"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const newValue = !settings.autoTranslateVoice;
+                              setSettings(prev => ({...prev, autoTranslateVoice: newValue}));
+                              toast.success(`Auto-translate voice ${newValue ? 'enabled' : 'disabled'}`);
+                            }}
+                          >
                             <input 
                               type="checkbox" 
                               checked={settings.autoTranslateVoice}
-                              onChange={(e) => {
-                                setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}));
-                                toast.success(`Auto-translate voice ${e.target.checked ? 'enabled' : 'disabled'}`);
-                              }}
+                              onChange={() => {}} // Controlled by label click
                               className="sr-only"
                             />
                             <div className={`voice-setting-checkbox ${settings.autoTranslateVoice ? 'checked' : ''}`}></div>
-                            <div>
-                              <span className="text-body-small font-medium">Auto-translate Voice Input</span>
-                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                            <div className="voice-setting-content">
+                              <span className="voice-setting-title">Auto-translate Voice Input</span>
+                              <p className="voice-setting-description">
                                 Automatically translate speech when detected
                               </p>
                             </div>
@@ -1740,9 +1755,9 @@ function App() {
                       </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-[var(--color-border)]">
-                      <Button 
-                        variant="outline" 
+                    <div className="settings-footer">
+                      <button
+                        type="button"
                         onClick={() => {
                           // Reset to defaults
                           const defaultSettings = {
@@ -1755,19 +1770,20 @@ function App() {
                           setSettings(defaultSettings);
                           toast.success('Settings reset to defaults');
                         }}
-                        className="btn-secondary"
+                        className="settings-button-reset"
                       >
                         Reset to Defaults
-                      </Button>
-                      <Button 
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => {
                           setIsSettingsOpen(false);
                           toast.success('Settings saved successfully');
                         }}
-                        className="btn-primary"
+                        className="settings-button-save"
                       >
                         Save Settings
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </DialogContent>
