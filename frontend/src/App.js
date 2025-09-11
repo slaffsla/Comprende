@@ -1603,9 +1603,9 @@ function App() {
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="card-modern settings-dialog dialog-stable">
-                  <DialogHeader>
-                    <DialogTitle className="text-heading-3">Settings</DialogTitle>
+                <DialogContent className="settings-dialog">
+                  <DialogHeader className="mb-6">
+                    <DialogTitle className="text-heading-3 mb-2">Settings</DialogTitle>
                     <p className="text-body text-[var(--color-text-secondary)]">
                       Customize your translation and collaboration preferences
                     </p>
@@ -1613,7 +1613,7 @@ function App() {
                   <div className="space-y-6">
                     <div className="settings-section">
                       <label className="settings-label">Default Source Language</label>
-                      <div className="select-stable settings-select">
+                      <div className="settings-select">
                         <Select 
                           value={settings.defaultSourceLang} 
                           onValueChange={(value) => {
@@ -1644,7 +1644,7 @@ function App() {
 
                     <div className="settings-section">
                       <label className="settings-label">Default Target Language</label>
-                      <div className="select-stable settings-select">
+                      <div className="settings-select">
                         <Select 
                           value={settings.defaultTargetLang}
                           onValueChange={(value) => {
