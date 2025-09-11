@@ -2894,10 +2894,10 @@ function App() {
 
       {/* File Upload Dialog */}
       <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload File to Team</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="file-upload-dialog">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-heading-3">Upload File to Team</DialogTitle>
+            <DialogDescription className="text-body">
               Share a file with your team members
             </DialogDescription>
           </DialogHeader>
@@ -2912,27 +2912,61 @@ function App() {
                 uploadTeamFile(currentTeam.id, file, description, tags);
               }
             }}
-            className="space-y-4"
+            className="space-y-6"
           >
             <div>
-              <label className="text-sm font-medium">File</label>
-              <Input name="file" type="file" required />
+              <label className="form-label">File</label>
+              <div className="enhanced-file-input-container">
+                <input 
+                  name="file" 
+                  type="file" 
+                  required 
+                  className="enhanced-file-input"
+                  onChange={(e) => {
+                    const fileName = e.target.files[0]?.name || '';
+                    const fileInfo = document.querySelector('.file-selected-info');
+                    if (fileInfo) {
+                      fileInfo.textContent = fileName ? `Selected: ${fileName}` : 'No file selected';
+                    }
+                  }}
+                />
+                <div className="enhanced-file-button">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Choose File
+                </div>
+                <div className="file-selected-info">No file selected</div>
+              </div>
             </div>
             <div>
-              <label className="text-sm font-medium">Description (Optional)</label>
-              <Textarea name="description" placeholder="Brief description of the file" />
+              <label className="form-label">Description (Optional)</label>
+              <textarea 
+                name="description" 
+                placeholder="Brief description of the file"
+                className="enhanced-textarea"
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">Tags (Optional)</label>
-              <Input name="tags" type="text" placeholder="Comma-separated tags" />
+              <label className="form-label">Tags (Optional)</label>
+              <input 
+                name="tags" 
+                type="text" 
+                placeholder="Comma-separated tags"
+                className="enhanced-input"
+              />
             </div>
-            <div className="flex space-x-2">
-              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+            <div className="flex space-x-3 pt-4">
+              <button type="submit" className="flex-1 dialog-button-primary">
                 Upload File
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowFileUpload(false)}>
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowFileUpload(false)}
+                className="dialog-button-secondary"
+              >
                 Cancel
-              </Button>
+              </button>
             </div>
           </form>
         </DialogContent>
