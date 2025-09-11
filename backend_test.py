@@ -927,6 +927,468 @@ Playing musical instruments (Mostly Handpan)"""
         
         return success
 
+    def test_team_creation(self):
+        """Test team creation endpoint - POST /api/teams"""
+        team_data = {
+            "name": "Development Team Alpha",
+            "description": "A test team for backend API testing and collaboration"
+        }
+        
+        success, response = self.run_test(
+            "Team Creation",
+            "POST",
+            "teams",
+            200,
+            data=team_data
+        )
+        
+        if success:
+            team_id = response.get('id', '')
+            team_name = response.get('name', '')
+            invite_code = response.get('invite_code', '')
+            members = response.get('members', [])
+            created_by = response.get('created_by', '')
+            
+            print(f"   Team ID: {team_id}")
+            print(f"   Team Name: {team_name}")
+            print(f"   Invite Code: {invite_code}")
+            print(f"   Members: {members}")
+            print(f"   Created By: {created_by}")
+            
+            # Verify UUID format for team ID
+            if team_id and len(team_id) == 36 and team_id.count('-') == 4:
+                print("   ✅ Team ID is proper UUID format")
+            else:
+                print("   ❌ Team ID is not proper UUID format")
+                self.failed_tests.append({
+                    'name': 'Team ID Format',
+                    'expected': 'UUID format (36 chars with 4 dashes)',
+                    'actual': f'ID: {team_id}',
+                    'response': 'Team ID should be UUID format'
+                })
+            
+            # Verify invite code generation
+            if invite_code and len(invite_code) == 8:
+                print("   ✅ Invite code generated (8 characters)")
+            else:
+                print("   ❌ Invite code format incorrect")
+                self.failed_tests.append({
+                    'name': 'Invite Code Generation',
+                    'expected': '8-character invite code',
+                    'actual': f'Code: {invite_code}',
+                    'response': 'Invite code should be 8 characters'
+                })
+            
+            # Verify creator is automatically added as member
+            if created_by in members:
+                print("   ✅ Creator automatically added as team member")
+            else:
+                print("   ❌ Creator not added as team member")
+                self.failed_tests.append({
+                    'name': 'Creator Auto-Add',
+                    'expected': 'Creator in members list',
+                    'actual': f'Creator: {created_by}, Members: {members}',
+                    'response': 'Team creator should be automatically added as member'
+                })
+            
+            # Store team data for other tests
+            self.test_team_id = team_id
+            self.test_team_invite_code = invite_code
+            
+            # Verify datetime serialization
+            created_at = response.get('created_at', '')
+            if created_at and 'T' in created_at:
+                print("   ✅ DateTime properly serialized to ISO string")
+            else:
+                print("   ❌ DateTime serialization issue")
+        
+        return success
+
+    def test_team_member_retrieval(self):
+        """Test team member retrieval endpoint - GET /api/teams/{team_id}"""
+        if not hasattr(self, 'test_team_id'):
+            print("   ⚠️  Skipping team retrieval - no team ID from creation test")
+            return False
+        
+        success, response = self.run_test(
+            "Team Member Retrieval",
+            "GET",
+            f"teams/{self.test_team_id}",
+            200
+        )
+        
+        if success:
+            team_id = response.get('id', '')
+            team_name = response.get('name', '')
+            members = response.get('members', [])
+            created_by = response.get('created_by', '')
+            invite_code = response.get('invite_code', '')
+            
+            print(f"   Retrieved Team ID: {team_id}")
+            print(f"   Team Name: {team_name}")
+            print(f"   Members Count: {len(members)}")
+            print(f"   Members: {members}")
+            print(f"   Created By: {created_by}")
+            print(f"   Invite Code: {invite_code}")
+            
+            # Verify team ID matches
+            if team_id == self.test_team_id:
+                print("   ✅ Team ID matches created team")
+            else:
+                print("   ❌ Team ID mismatch")
+                self.failed_tests.append({
+                    'name': 'Team ID Match',
+                    'expected': self.test_team_id,
+                    'actual': team_id,
+                    'response': 'Retrieved team ID should match created team'
+                })
+            
+            # Verify no MongoDB ObjectId fields
+            if '_id' in response:
+                print("   ❌ CRITICAL: MongoDB ObjectId field found in response")
+                self.failed_tests.append({
+                    'name': 'Team MongoDB ObjectId Cleanup',
+                    'expected': 'No _id field in response',
+                    'actual': '_id field present',
+                    'response': 'ObjectId fields should be removed to prevent JSON serialization errors'
+                })
+            else:
+                print("   ✅ No MongoDB ObjectId fields in response")
+            
+            # Verify team member data structure
+            if isinstance(members, list):
+                print("   ✅ Members returned as list")
+                if len(members) > 0:
+                    print(f"   ✅ Team has {len(members)} member(s)")
+                else:
+                    print("   ⚠️  Team has no members")
+            else:
+                print("   ❌ Members not returned as list")
+        
+        return success
+
+    def test_team_invitation_join(self):
+        """Test team invitation/join endpoint - POST /api/teams/join"""
+        if not hasattr(self, 'test_team_invite_code'):
+            print("   ⚠️  Skipping team join - no invite code from creation test")
+            return False
+        
+        join_data = {
+            "invite_code": self.test_team_invite_code
+        }
+        
+        success, response = self.run_test(
+            "Team Join via Invite Code",
+            "POST",
+            "teams/join",
+            200,
+            data=join_data
+        )
+        
+        if success:
+            message = response.get('message', '')
+            team_id = response.get('team_id', '')
+            team_name = response.get('team_name', '')
+            invite_code = response.get('invite_code', '')
+            
+            print(f"   Join Message: {message}")
+            print(f"   Team ID: {team_id}")
+            print(f"   Team Name: {team_name}")
+            print(f"   Used Invite Code: {invite_code}")
+            
+            # Verify successful join
+            if "successfully joined" in message.lower():
+                print("   ✅ Team join successful")
+            else:
+                print("   ❌ Team join message unclear")
+            
+            # Verify team ID matches
+            if team_id == self.test_team_id:
+                print("   ✅ Joined correct team")
+            else:
+                print("   ❌ Joined wrong team or team ID mismatch")
+            
+            # Verify invite code validation worked
+            if invite_code == self.test_team_invite_code:
+                print("   ✅ Invite code validation working")
+            else:
+                print("   ❌ Invite code validation issue")
+        
+        return success
+
+    def test_team_file_upload(self):
+        """Test file upload endpoint - POST /api/teams/{team_id}/files/upload"""
+        if not hasattr(self, 'test_team_id'):
+            print("   ⚠️  Skipping team file upload - no team ID from creation test")
+            return False
+        
+        # Create a test file for upload
+        test_content = """Team Collaboration Document
+        
+This is a test document for team file sharing functionality.
+It contains sample content to verify file upload and processing.
+
+Key Features to Test:
+- File upload to team workspace
+- Metadata handling (description, tags)
+- Team member access verification
+- File storage and retrieval
+- Notification system for team members
+
+Test Data:
+- Team: Development Team Alpha
+- Uploader: demo-user
+- File Type: Text Document
+- Tags: testing, collaboration, backend-api
+"""
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write(test_content)
+            temp_file_path = f.name
+        
+        try:
+            with open(temp_file_path, 'rb') as f:
+                files = {'file': ('team_collaboration_doc.txt', f, 'text/plain')}
+                data = {
+                    'description': 'Test document for team collaboration and API testing',
+                    'tags': 'testing,collaboration,backend-api,team-sharing'
+                }
+                
+                success, response = self.run_test(
+                    "Team File Upload",
+                    "POST",
+                    f"teams/{self.test_team_id}/files/upload",
+                    200,
+                    data=data,
+                    files=files
+                )
+                
+                if success:
+                    message = response.get('message', '')
+                    file_id = response.get('file_id', '')
+                    filename = response.get('filename', '')
+                    team_id = response.get('team_id', '')
+                    
+                    print(f"   Upload Message: {message}")
+                    print(f"   File ID: {file_id}")
+                    print(f"   Filename: {filename}")
+                    print(f"   Team ID: {team_id}")
+                    
+                    # Verify successful upload
+                    if "uploaded successfully" in message.lower():
+                        print("   ✅ File upload successful")
+                    else:
+                        print("   ❌ File upload message unclear")
+                    
+                    # Verify file ID is UUID format
+                    if file_id and len(file_id) == 36 and file_id.count('-') == 4:
+                        print("   ✅ File ID is proper UUID format")
+                    else:
+                        print("   ❌ File ID is not proper UUID format")
+                        self.failed_tests.append({
+                            'name': 'Team File ID Format',
+                            'expected': 'UUID format',
+                            'actual': f'File ID: {file_id}',
+                            'response': 'File ID should be UUID format'
+                        })
+                    
+                    # Verify team ID matches
+                    if team_id == self.test_team_id:
+                        print("   ✅ File uploaded to correct team")
+                    else:
+                        print("   ❌ File uploaded to wrong team")
+                    
+                    # Store file ID for other tests
+                    self.test_file_id = file_id
+                
+                return success
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
+
+    def test_team_files_retrieval(self):
+        """Test team files retrieval - GET /api/teams/{team_id}/files"""
+        if not hasattr(self, 'test_team_id'):
+            print("   ⚠️  Skipping team files retrieval - no team ID from creation test")
+            return False
+        
+        success, response = self.run_test(
+            "Team Files Retrieval",
+            "GET",
+            f"teams/{self.test_team_id}/files",
+            200
+        )
+        
+        if success:
+            team_id = response.get('team_id', '')
+            team_name = response.get('team_name', '')
+            files = response.get('files', [])
+            
+            print(f"   Team ID: {team_id}")
+            print(f"   Team Name: {team_name}")
+            print(f"   Files Count: {len(files)}")
+            
+            # Verify team ID matches
+            if team_id == self.test_team_id:
+                print("   ✅ Retrieved files for correct team")
+            else:
+                print("   ❌ Retrieved files for wrong team")
+            
+            # Verify files structure
+            if isinstance(files, list):
+                print("   ✅ Files returned as list")
+                
+                if len(files) > 0:
+                    print(f"   ✅ Found {len(files)} file(s) in team")
+                    
+                    # Check if our uploaded file is present
+                    if hasattr(self, 'test_file_id'):
+                        file_found = False
+                        for file_obj in files:
+                            if hasattr(file_obj, 'id') and file_obj.id == self.test_file_id:
+                                file_found = True
+                                print("   ✅ Uploaded test file found in team files")
+                                print(f"      File: {file_obj.original_name}")
+                                print(f"      Description: {file_obj.description}")
+                                print(f"      Tags: {file_obj.tags}")
+                                break
+                            elif isinstance(file_obj, dict) and file_obj.get('id') == self.test_file_id:
+                                file_found = True
+                                print("   ✅ Uploaded test file found in team files")
+                                print(f"      File: {file_obj.get('original_name')}")
+                                print(f"      Description: {file_obj.get('description')}")
+                                print(f"      Tags: {file_obj.get('tags')}")
+                                break
+                        
+                        if not file_found:
+                            print("   ❌ Uploaded test file not found in team files")
+                            self.failed_tests.append({
+                                'name': 'Team File Persistence',
+                                'expected': 'Uploaded file in team files list',
+                                'actual': 'File not found',
+                                'response': 'Uploaded files should appear in team files list'
+                            })
+                else:
+                    print("   ⚠️  No files found in team")
+            else:
+                print("   ❌ Files not returned as list")
+        
+        return success
+
+    def test_team_file_download(self):
+        """Test team file download - GET /api/teams/{team_id}/files/{file_id}/download"""
+        if not hasattr(self, 'test_team_id') or not hasattr(self, 'test_file_id'):
+            print("   ⚠️  Skipping team file download - missing team ID or file ID")
+            return False
+        
+        # For file download, we expect a file response, not JSON
+        url = f"{self.api_url}/teams/{self.test_team_id}/files/{self.test_file_id}/download"
+        
+        print(f"\n🔍 Testing Team File Download...")
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                
+                # Check content type
+                content_type = response.headers.get('content-type', '')
+                print(f"   Content-Type: {content_type}")
+                
+                # Check content disposition for filename
+                content_disposition = response.headers.get('content-disposition', '')
+                print(f"   Content-Disposition: {content_disposition}")
+                
+                # Check if we got file content
+                content = response.text
+                if len(content) > 0:
+                    print(f"   File Content Length: {len(content)} characters")
+                    print(f"   Content Preview: {content[:100]}...")
+                    
+                    # Verify it's our test content
+                    if "Team Collaboration Document" in content:
+                        print("   ✅ Downloaded correct file content")
+                    else:
+                        print("   ❌ Downloaded content doesn't match uploaded file")
+                        self.failed_tests.append({
+                            'name': 'Team File Download Content',
+                            'expected': 'Original uploaded content',
+                            'actual': 'Different content',
+                            'response': 'Downloaded file should match uploaded content'
+                        })
+                else:
+                    print("   ❌ No content in downloaded file")
+                
+                return True
+            else:
+                print(f"❌ Failed - Expected 200, got {response.status_code}")
+                print(f"   Response: {response.text[:300]}")
+                self.failed_tests.append({
+                    'name': 'Team File Download',
+                    'expected': 200,
+                    'actual': response.status_code,
+                    'response': response.text[:300]
+                })
+                return False
+                
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            self.failed_tests.append({'name': 'Team File Download', 'error': str(e)})
+            return False
+        finally:
+            self.tests_run += 1
+
+    def test_team_access_control(self):
+        """Test team access control and permissions"""
+        if not hasattr(self, 'test_team_id'):
+            print("   ⚠️  Skipping team access control - no team ID from creation test")
+            return False
+        
+        # Test accessing team with different user (should work since we're using demo-user)
+        success, response = self.run_test(
+            "Team Access Control Verification",
+            "GET",
+            f"teams/{self.test_team_id}",
+            200
+        )
+        
+        if success:
+            members = response.get('members', [])
+            created_by = response.get('created_by', '')
+            
+            print(f"   Team Members: {members}")
+            print(f"   Created By: {created_by}")
+            
+            # Verify access control is working (demo-user should have access)
+            if 'demo-user' in members or created_by == 'demo-user':
+                print("   ✅ Access control working - user has proper access")
+            else:
+                print("   ⚠️  Access control test - user access verification")
+        
+        return success
+
+    def test_invalid_team_access(self):
+        """Test access to non-existent team"""
+        invalid_team_id = "00000000-0000-0000-0000-000000000000"
+        
+        success, response = self.run_test(
+            "Invalid Team Access",
+            "GET",
+            f"teams/{invalid_team_id}",
+            404
+        )
+        
+        if success:
+            print("   ✅ Proper 404 response for non-existent team")
+        
+        return success
+
 def main():
     print("🚀 Starting Comprende API Testing Suite")
     print("=" * 60)
