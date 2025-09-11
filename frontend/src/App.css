@@ -1685,6 +1685,39 @@ body {
   }
 }
 
+/* User Profile Dialog Positioning */
+.user-profile-dialog {
+  position: fixed !important;
+  top: 60px !important;
+  right: 20px !important;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 80px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-xl);
+  z-index: 1000;
+  overflow-y: auto;
+  animation: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+/* Mobile Responsive User Profile Dialog */
+@media (max-width: 768px) {
+  .user-profile-dialog {
+    position: fixed !important;
+    top: 60px !important;
+    left: 20px !important;
+    right: 20px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+  }
+}
+
 /* Team Member Invitation Button */
 .invite-members-button {
   display: flex;
