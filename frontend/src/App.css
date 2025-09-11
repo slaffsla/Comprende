@@ -661,3 +661,217 @@ body {
 .nav-tab.active::before {
   transform: scaleX(1);
 }
+
+/* Select Component Stabilization */
+.select-stable {
+  position: relative;
+  z-index: 1000;
+}
+
+.select-stable [data-radix-select-content] {
+  position: fixed !important;
+  z-index: 9999 !important;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(4px);
+  animation: select-slide-in 150ms ease-out;
+}
+
+@keyframes select-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(4px) scale(1);
+  }
+}
+
+.select-stable [data-radix-select-trigger] {
+  min-height: 40px;
+  transition: none !important;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  position: relative;
+}
+
+.select-stable [data-radix-select-trigger]:focus {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-color: var(--color-border-focus);
+}
+
+.select-stable [data-radix-select-trigger][data-state="open"] {
+  border-color: var(--color-border-focus);
+}
+
+.select-stable [data-radix-select-item] {
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-fast);
+  border-radius: var(--radius-sm);
+  margin: 2px;
+}
+
+.select-stable [data-radix-select-item]:hover {
+  background: var(--color-background-tertiary);
+}
+
+.select-stable [data-radix-select-item][data-highlighted] {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  outline: none;
+}
+
+/* Prevent layout shifts in dialogs */
+.dialog-stable {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+/* Settings Dialog Specific Styles */
+.settings-dialog {
+  min-width: 400px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.settings-section {
+  margin-bottom: var(--space-lg);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.settings-select {
+  width: 100%;
+  margin-bottom: var(--space-md);
+}
+
+/* Voice Settings Styles */
+.voice-settings {
+  background: var(--color-background-secondary);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.voice-setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.voice-setting-item:last-child {
+  border-bottom: none;
+}
+
+.voice-setting-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  flex: 1;
+}
+
+.voice-setting-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.voice-setting-checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.voice-setting-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Error Boundary Styles */
+.error-boundary {
+  padding: var(--space-xl);
+  text-align: center;
+  background: var(--color-background-secondary);
+  border: 2px dashed var(--color-danger);
+  border-radius: var(--radius-lg);
+  color: var(--color-danger);
+}
+
+.error-boundary-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-md);
+  background: rgba(220, 38, 38, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-danger);
+}
+
+/* Suppress ResizeObserver overlay in development */
+#webpack-dev-server-client-overlay {
+  display: none !important;
+}
+
+/* Fix for select content positioning issues */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+  animation: none !important;
+}
+
+/* Stable positioning for all dropdowns */
+[role="listbox"],
+[role="menu"],
+[data-state="open"][data-side] {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Override any transitions that might cause resize loops */
+.radix-select-content,
+.radix-dropdown-menu-content,
+.radix-popover-content {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
