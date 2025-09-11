@@ -235,6 +235,10 @@ function App() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showInviteMembers, setShowInviteMembers] = useState(false);
   const [selectedTeamForFiles, setSelectedTeamForFiles] = useState(null);
+  const [showTeamDetail, setShowTeamDetail] = useState(false);
+  const [selectedTeamForDetail, setSelectedTeamForDetail] = useState(null);
+  const [teamChat, setTeamChat] = useState({});
+  const [newMessage, setNewMessage] = useState('');
   
   // Settings state with localStorage persistence
   const [settings, setSettings] = useState(() => {
