@@ -492,10 +492,6 @@ function App() {
         setActiveTab("collaborate");
         toast.success(`🎥 Joined meeting: ${meeting.name}`);
         
-        // Auto-initialize WebRTC after a short delay
-        setTimeout(() => {
-          initializeWebRTC(meetingId);
-        }, 1500);
         
       }
     } catch (error) {
