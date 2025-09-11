@@ -1337,6 +1337,20 @@ function App() {
     }
   };
 
+  // Simplified video meeting functionality - WebRTC moved to future development
+  const joinMeeting = async (meetingId) => {
+    // Show "Coming soon" message instead of WebRTC implementation
+    toast.info("🚀 Video calling coming soon! We're working on an amazing video experience for you.", {
+      duration: 4000,
+      icon: "🎥"
+    });
+  };
+
+  // Commented out WebRTC functions for future development
+  /*
+  // ===== FUTURE WEBRTC IMPLEMENTATION =====
+  // These functions will be used when WebRTC infrastructure is ready
+  
   const initializeWebRTC = async (meetingId) => {
     try {
       setIsLoading(true);
@@ -1554,6 +1568,9 @@ function App() {
       return newMap;
     });
   };
+  
+  // ===== END FUTURE WEBRTC IMPLEMENTATION =====
+  */
 
   const joinMeeting = (meetingId) => {
     initializeWebRTC(meetingId);
