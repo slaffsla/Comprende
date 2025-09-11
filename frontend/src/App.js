@@ -2669,22 +2669,40 @@ function App() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {users.map(user => (
-                        <div key={user.id} className="flex items-center space-x-3">
-                          <div className="text-2xl">{user.avatar}</div>
-                          <div className="flex-1">
-                            <p className="font-medium">{user.name}</p>
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-2 h-2 rounded-full ${
-                                user.status === 'online' ? 'bg-green-500' :
-                                user.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
-                              }`}></div>
-                              <span className="text-xs text-gray-500 capitalize">{user.status}</span>
+                      {currentTeam && currentTeam.members ? (
+                        currentTeam.members.map(member => (
+                          <div key={member.id || member.email} className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                              {member.name ? member.name.charAt(0).toUpperCase() : member.email.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium">{member.name || member.email}</p>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span className="text-xs text-gray-500">Member</span>
+                              </div>
                             </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">
+                            {currentTeam ? 'No team members yet' : 'Select or create a team to see members'}
+                          </p>
                         </div>
-                      ))}
+                      )}
                     </div>
+                    {currentTeam && (
+                      <button 
+                        onClick={() => setShowInviteMembers(true)}
+                        className="invite-members-button w-full"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Invite Members
+                      </button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
