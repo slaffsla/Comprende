@@ -1816,7 +1816,7 @@ function App() {
                     <span className="hidden sm:inline text-body-small">{currentUser.name}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="card-modern">
+                <DialogContent className="user-profile-dialog">
                   <DialogHeader>
                     <DialogTitle className="text-heading-3">User Profile</DialogTitle>
                   </DialogHeader>
