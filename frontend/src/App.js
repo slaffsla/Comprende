@@ -1548,101 +1548,170 @@ function App() {
                     <Settings className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="card-modern">
+                <DialogContent className="card-modern settings-dialog dialog-stable">
                   <DialogHeader>
                     <DialogTitle className="text-heading-3">Settings</DialogTitle>
+                    <p className="text-body text-[var(--color-text-secondary)]">
+                      Customize your translation and collaboration preferences
+                    </p>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-body-small font-medium">Default Source Language</label>
-                      <Select 
-                        value={settings.defaultSourceLang} 
-                        onValueChange={(value) => {
-                          setSettings(prev => ({...prev, defaultSourceLang: value}));
-                          setSourceLang(value);
-                        }}
-                      >
-                        <SelectTrigger className="input-field">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="auto">Auto-detect</SelectItem>
-                          {Object.entries(LANGUAGES).map(([code, name]) => (
-                            <SelectItem key={code} value={code}>{name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-body-small font-medium">Default Target Language</label>
-                      <Select 
-                        value={settings.defaultTargetLang}
-                        onValueChange={(value) => {
-                          setSettings(prev => ({...prev, defaultTargetLang: value}));
-                          setTargetLang(value);
-                        }}
-                      >
-                        <SelectTrigger className="input-field">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(LANGUAGES).map(([code, name]) => (
-                            <SelectItem key={code} value={code}>{name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-body-small font-medium">Voice Settings</label>
-                      <div className="space-y-3 mt-3">
-                        <label className="flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
-                            checked={settings.voiceInputEnabled}
-                            onChange={(e) => setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}))}
-                          />
-                          <span className="text-body-small font-medium">Enable voice input</span>
-                        </label>
-                        <label className="flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
-                            checked={settings.voiceOutputEnabled}
-                            onChange={(e) => setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}))}
-                          />
-                          <span className="text-body-small font-medium">Enable voice output</span>
-                        </label>
-                        <label className="flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="mr-3 h-4 w-4 text-[var(--color-primary)] border-[var(--color-border)] rounded focus:ring-[var(--color-primary)]" 
-                            checked={settings.autoTranslateVoice}
-                            onChange={(e) => setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}))}
-                          />
-                          <span className="text-body-small font-medium">Auto-translate voice input</span>
-                        </label>
+                  <div className="space-y-6">
+                    <div className="settings-section">
+                      <label className="settings-label">Default Source Language</label>
+                      <div className="select-stable settings-select">
+                        <Select 
+                          value={settings.defaultSourceLang} 
+                          onValueChange={(value) => {
+                            try {
+                              setSettings(prev => ({...prev, defaultSourceLang: value}));
+                              setSourceLang(value);
+                              toast.success(`Source language set to ${value === 'auto' ? 'Auto-detect' : LANGUAGES[value] || value}`);
+                            } catch (error) {
+                              console.error('Error updating source language:', error);
+                              toast.error('Failed to update source language');
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="focus-ring">
+                            <SelectValue placeholder="Select source language" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            <SelectItem value="auto">🌐 Auto-detect</SelectItem>
+                            {Object.entries(LANGUAGES).map(([code, name]) => (
+                              <SelectItem key={code} value={code}>
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div className="pt-4 border-t border-[var(--color-border)]">
+
+                    <div className="settings-section">
+                      <label className="settings-label">Default Target Language</label>
+                      <div className="select-stable settings-select">
+                        <Select 
+                          value={settings.defaultTargetLang}
+                          onValueChange={(value) => {
+                            try {
+                              setSettings(prev => ({...prev, defaultTargetLang: value}));
+                              setTargetLang(value);
+                              toast.success(`Target language set to ${LANGUAGES[value] || value}`);
+                            } catch (error) {
+                              console.error('Error updating target language:', error);
+                              toast.error('Failed to update target language');
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="focus-ring">
+                            <SelectValue placeholder="Select target language" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {Object.entries(LANGUAGES).map(([code, name]) => (
+                              <SelectItem key={code} value={code}>
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="settings-section">
+                      <label className="settings-label">Voice & Audio Settings</label>
+                      <div className="voice-settings">
+                        <div className="voice-setting-item">
+                          <label className="voice-setting-label">
+                            <input 
+                              type="checkbox" 
+                              checked={settings.voiceInputEnabled}
+                              onChange={(e) => {
+                                setSettings(prev => ({...prev, voiceInputEnabled: e.target.checked}));
+                                toast.success(`Voice input ${e.target.checked ? 'enabled' : 'disabled'}`);
+                              }}
+                              className="sr-only"
+                            />
+                            <div className={`voice-setting-checkbox ${settings.voiceInputEnabled ? 'checked' : ''}`}></div>
+                            <div>
+                              <span className="text-body-small font-medium">Enable Voice Input</span>
+                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                                Allow microphone access for voice translations
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        <div className="voice-setting-item">
+                          <label className="voice-setting-label">
+                            <input 
+                              type="checkbox" 
+                              checked={settings.voiceOutputEnabled}
+                              onChange={(e) => {
+                                setSettings(prev => ({...prev, voiceOutputEnabled: e.target.checked}));
+                                toast.success(`Voice output ${e.target.checked ? 'enabled' : 'disabled'}`);
+                              }}
+                              className="sr-only"
+                            />
+                            <div className={`voice-setting-checkbox ${settings.voiceOutputEnabled ? 'checked' : ''}`}></div>
+                            <div>
+                              <span className="text-body-small font-medium">Enable Voice Output</span>
+                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                                Play translated text using text-to-speech
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+
+                        <div className="voice-setting-item">
+                          <label className="voice-setting-label">
+                            <input 
+                              type="checkbox" 
+                              checked={settings.autoTranslateVoice}
+                              onChange={(e) => {
+                                setSettings(prev => ({...prev, autoTranslateVoice: e.target.checked}));
+                                toast.success(`Auto-translate voice ${e.target.checked ? 'enabled' : 'disabled'}`);
+                              }}
+                              className="sr-only"
+                            />
+                            <div className={`voice-setting-checkbox ${settings.autoTranslateVoice ? 'checked' : ''}`}></div>
+                            <div>
+                              <span className="text-body-small font-medium">Auto-translate Voice Input</span>
+                              <p className="text-caption text-[var(--color-text-tertiary)]">
+                                Automatically translate speech when detected
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-[var(--color-border)]">
                       <Button 
                         variant="outline" 
-                        className="w-full btn-secondary"
                         onClick={() => {
+                          // Reset to defaults
                           const defaultSettings = {
+                            defaultSourceLang: 'auto',
+                            defaultTargetLang: 'eng',
                             voiceInputEnabled: true,
                             voiceOutputEnabled: true,
-                            autoTranslateVoice: false,
-                            defaultSourceLang: 'auto',
-                            defaultTargetLang: 'eng'
+                            autoTranslateVoice: false
                           };
                           setSettings(defaultSettings);
-                          setSourceLang('auto');
-                          setTargetLang('eng');
-                          toast.success("Settings reset to defaults");
+                          toast.success('Settings reset to defaults');
                         }}
+                        className="btn-secondary"
                       >
                         Reset to Defaults
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setIsSettingsOpen(false);
+                          toast.success('Settings saved successfully');
+                        }}
+                        className="btn-primary"
+                      >
+                        Save Settings
                       </Button>
                     </div>
                   </div>
