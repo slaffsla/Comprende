@@ -2761,7 +2761,9 @@ function App() {
                         currentTeam.members.map(member => (
                           <div key={member.id || member.email} className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                              {member.name ? member.name.charAt(0).toUpperCase() : member.email.charAt(0).toUpperCase()}
+                              {member.name ? member.name.charAt(0).toUpperCase() : 
+                               member.email ? member.email.charAt(0).toUpperCase() : 
+                               '?'}
                             </div>
                             <div className="flex-1">
                               <p className="font-medium">{member.name || member.email}</p>
