@@ -3243,6 +3243,235 @@ function App() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Team Detail Dialog */}
+      <Dialog open={showTeamDetail} onOpenChange={setShowTeamDetail}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-heading-2 flex items-center gap-3">
+              <Users className="h-6 w-6 text-blue-600" />
+              {selectedTeamForDetail?.name}
+            </DialogTitle>
+            <DialogDescription className="text-body">
+              {selectedTeamForDetail?.description} • {selectedTeamForDetail?.members?.length || 0} members • Created {selectedTeamForDetail?.created_at ? new Date(selectedTeamForDetail.created_at).toLocaleDateString() : 'recently'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[70vh]">
+            {/* Team Members Panel */}
+            <div className="lg:col-span-1 border rounded-lg p-4 overflow-y-auto">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Team Members
+              </h3>
+              
+              <div className="space-y-3">
+                {selectedTeamForDetail && selectedTeamForDetail.members && Array.isArray(selectedTeamForDetail.members) ? (
+                  selectedTeamForDetail.members.filter(member => member && (member.name || member.email || member.id)).map(member => (
+                    <div key={member.id || member.email} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {member.name ? member.name.charAt(0).toUpperCase() : 
+                           member.email ? member.email.charAt(0).toUpperCase() : 
+                           '?'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{member.name || member.email || 'Unknown Member'}</p>
+                          <p className="text-xs text-gray-500">Online</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.onchange = (e) => {
+                              const file = e.target.files[0];
+                              if (file) sendFileToMember(member.id || member.email, file);
+                            };
+                            input.click();
+                          }}
+                          title="Send file"
+                        >
+                          <FileText className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toast.success(`📧 Direct message to ${member.name || member.email} (Coming soon!)`)}
+                          title="Send message"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No members yet</p>
+                  </div>
+                )}
+                
+                <Button 
+                  onClick={() => setShowInviteMembers(true)}
+                  className="w-full mt-4 bg-green-600 hover:bg-green-700"
+                  size="sm"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite Members
+                </Button>
+              </div>
+            </div>
+
+            {/* Team Chat Panel */}
+            <div className="lg:col-span-2 flex flex-col border rounded-lg overflow-hidden">
+              <div className="p-4 bg-gray-50 border-b">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Team Chat
+                </h3>
+              </div>
+              
+              {/* Chat Messages */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                {selectedTeamForDetail && teamChat[selectedTeamForDetail.id] ? (
+                  teamChat[selectedTeamForDetail.id].map(msg => (
+                    <div 
+                      key={msg.id} 
+                      className={`flex ${msg.sender.id === currentUser?.id ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                        msg.type === 'system' 
+                          ? 'bg-blue-100 text-blue-800 text-center w-full text-sm'
+                          : msg.sender.id === currentUser?.id 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-800'
+                      }`}>
+                        {msg.type !== 'system' && msg.sender.id !== currentUser?.id && (
+                          <p className="text-xs font-semibold mb-1">{msg.sender.name}</p>
+                        )}
+                        <p className="text-sm">{msg.message}</p>
+                        <p className={`text-xs mt-1 ${
+                          msg.type === 'system' ? 'text-blue-600' :
+                          msg.sender.id === currentUser?.id ? 'text-blue-200' : 'text-gray-500'
+                        }`}>
+                          {new Date(msg.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Start the conversation!</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Message Input */}
+              <div className="p-4 border-t bg-gray-50">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (selectedTeamForDetail) {
+                          sendTeamMessage(selectedTeamForDetail.id, newMessage);
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={() => {
+                      if (selectedTeamForDetail) {
+                        sendTeamMessage(selectedTeamForDetail.id, newMessage);
+                      }
+                    }}
+                    disabled={!newMessage.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Team Files Section */}
+          <div className="mt-6 border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <FolderOpen className="h-4 w-4" />
+                Team Files ({teamFiles.length})
+              </h3>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowFileUpload(true)} 
+                  className="bg-green-600 hover:bg-green-700"
+                  size="sm"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload File
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => selectedTeamForDetail && loadTeamFiles(selectedTeamForDetail.id)}
+                  size="sm"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+            
+            <div className="max-h-40 overflow-y-auto">
+              {teamFiles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {teamFiles.map(file => (
+                    <div key={file.id} className="p-3 border rounded-lg hover:bg-gray-50 flex items-center gap-3">
+                      <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{file.original_name}</p>
+                        <p className="text-xs text-gray-500">{file.file_type} • {new Date(file.uploaded_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadTeamFile(selectedTeamForDetail.id, file.id, file.original_name)}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 border-2 border-dashed rounded-lg">
+                  <FolderOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm mb-2">No files shared yet</p>
+                  <Button 
+                    onClick={() => setShowFileUpload(true)} 
+                    className="bg-green-600 hover:bg-green-700"
+                    size="sm"
+                  >
+                    Upload First File
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       </>
       )}
     </div>
