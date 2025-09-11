@@ -1178,6 +1178,9 @@ function App() {
         // Copy invite code to clipboard
         await copyToClipboard(response.data.invite_code);
         setShowTeamCreator(false);
+        
+        // Load full team details including members
+        await loadTeamDetails(response.data.id);
       }
     } catch (error) {
       console.error('Failed to create team:', error);
