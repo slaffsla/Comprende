@@ -1439,6 +1439,22 @@ def main():
     tester.test_meeting_update_not_found()
     tester.test_meeting_storage_verification()
     
+    # TEAM MANAGEMENT TESTS (REQUESTED)
+    print("\n👥 TEAM MANAGEMENT TESTS (REQUESTED)")
+    print("-" * 50)
+    tester.test_team_creation()
+    tester.test_team_member_retrieval()
+    tester.test_team_invitation_join()
+    tester.test_team_access_control()
+    tester.test_invalid_team_access()
+    
+    # TEAM FILE SHARING TESTS (REQUESTED)
+    print("\n📁 TEAM FILE SHARING TESTS (REQUESTED)")
+    print("-" * 50)
+    tester.test_team_file_upload()
+    tester.test_team_files_retrieval()
+    tester.test_team_file_download()
+    
     # File Download Tests
     print("\n📥 FILE DOWNLOAD TESTS")
     print("-" * 30)
