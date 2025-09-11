@@ -965,20 +965,75 @@ body {
   box-shadow: var(--shadow-md);
 }
 
-/* Cursor stability fixes */
+/* Complete dialog stability - no cursor-induced movements */
+[data-radix-dialog-content] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  pointer-events: auto;
+}
+
+[data-radix-dialog-overlay] {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5);
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Prevent any movement on hover or interaction */
 .settings-dialog,
-.settings-dialog * {
-  pointer-events: auto;
-  user-select: none;
+.settings-dialog *,
+[data-radix-dialog-content],
+[data-radix-dialog-content] * {
+  transform: none !important;
+  animation: none !important;
+  transition-property: background-color, border-color, color, box-shadow, opacity !important;
+  transition-duration: var(--transition-fast) !important;
+  will-change: auto !important;
 }
 
-.settings-dialog input[type="checkbox"] {
-  pointer-events: none;
+/* Stabilize select dropdowns completely */
+[data-radix-select-content] {
+  position: fixed !important;
+  z-index: 10000 !important;
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+  transform: translateY(4px) !important;
 }
 
-.voice-setting-label {
-  pointer-events: auto;
-  user-select: none;
+/* Remove any problematic transforms or animations */
+[data-radix-popper-content-wrapper] {
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Force stable checkbox interactions */
+.voice-setting-checkbox {
+  transform: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+
+.voice-setting-checkbox:hover {
+  transform: scale(1.05) !important;
+  transition: transform var(--transition-fast) !important;
+}
+
+.voice-setting-checkbox.checked {
+  transform: none !important;
+}
+
+.voice-setting-checkbox.checked:hover {
+  transform: scale(1.05) !important;
 }
 
 /* Error Boundary Styles */
