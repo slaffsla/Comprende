@@ -2421,155 +2421,95 @@ function App() {
                   </Card>
                 )}
 
-                {/* Traditional Meeting Section (condensed) */}
-                <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+                {/* Video Meetings Section with Coming Soon Message */}
+                <Card className="card-elevated">
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2 text-slate-800">
-                      <Video className="h-5 w-5 text-purple-600" />
+                    <CardTitle className="text-heading-3 flex items-center space-x-2">
+                      <Video className="h-5 w-5 text-[var(--color-primary)]" />
                       <span>Video Meetings</span>
                     </CardTitle>
+                    <CardDescription className="text-body">
+                      Advanced video collaboration features
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex space-x-4">
-                      <Button onClick={createMeeting} className="bg-purple-600 hover:bg-purple-700">
+                      <Button onClick={createMeeting} className="btn-primary">
                         <Plus className="h-4 w-4 mr-2" />
                         Start Meeting
                       </Button>
                     </div>
 
-                    {/* Active Meetings (condensed) */}
+                    {/* Active Meetings */}
                     {meetings.length > 0 && (
                       <div className="space-y-3">
+                        <h3 className="text-heading-3">Active Meetings</h3>
                         {meetings.map(meeting => (
-                          <div key={meeting.id} className="p-3 border rounded-lg">
+                          <div key={meeting.id} className="team-card">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="font-medium">{meeting.name}</h4>
-                                <p className="text-sm text-gray-500">
+                              <div className="flex-1">
+                                <h4 className="text-body font-medium">{meeting.name}</h4>
+                                <p className="text-body-small text-[var(--color-text-tertiary)]">
                                   Meeting ID: {meeting.id}
                                 </p>
+                                <div className="flex items-center space-x-4 mt-2">
+                                  <span className="text-caption">
+                                    👥 {meeting.participants?.length || 0} participants
+                                  </span>
+                                  <span className="text-caption">
+                                    📅 {new Date(meeting.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
                               </div>
                               <div className="flex space-x-2">
-                                {/* Only show Join Video button if not already in video call */}
-                                {!localStream ? (
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => joinMeeting(meeting.id)}
-                                    disabled={isLoading}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm"
-                                  >
-                                    {isLoading ? (
-                                      <span className="flex items-center">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                                        <span className="text-white font-medium">Connecting...</span>
-                                      </span>
-                                    ) : (
-                                      <>
-                                        <Video className="h-4 w-4 mr-1 text-white" />
-                                        <span className="text-white font-medium">Join Video</span>
-                                      </>
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm cursor-default"
-                                    disabled={true}
-                                  >
-                                    <Video className="h-4 w-4 mr-1 text-white" />
-                                    <span className="text-white font-medium">In Video Call</span>
-                                  </Button>
-                                )}
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => joinMeeting(meeting.id)}
+                                  disabled={isLoading}
+                                  className="btn-primary"
+                                >
+                                  {isLoading ? (
+                                    <span className="flex items-center">
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                      <span>Connecting...</span>
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <Video className="h-4 w-4 mr-1" />
+                                      <span>Join Video</span>
+                                    </>
+                                  )}
+                                </Button>
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
                                   title="Copy meeting link to share"
                                   onClick={() => shareMeetingLink(meeting)}
-                                  className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 font-medium shadow-sm"
+                                  className="btn-accent"
                                 >
-                                  <Share className="h-4 w-4 text-blue-700 mr-1" />
-                                  <span className="text-blue-700 font-medium">Copy Link</span>
+                                  <Share className="h-4 w-4 mr-1" />
+                                  <span>Copy Link</span>
                                 </Button>
                               </div>
                             </div>
                             
-                            {/* Video Interface */}
-                            {localStream && (
-                              <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {/* Local Video */}
-                                  <div className="relative">
-                                    <video
-                                      id="local-video"
-                                      autoPlay
-                                      muted
-                                      playsInline
-                                      className="w-full h-48 bg-gray-800 rounded-lg object-cover"
-                                    />
-                                    <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                      You ({currentUser?.name || 'User'})
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Remote Videos */}
-                                  {connectedUsers.map((userId) => (
-                                    <div key={userId} className="relative">
-                                      <video
-                                        id={`remote-video-${userId}`}
-                                        autoPlay
-                                        playsInline
-                                        className="w-full h-48 bg-gray-800 rounded-lg object-cover"
-                                      />
-                                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                        {userId}
-                                      </div>
-                                    </div>
-                                  ))}
-                                  
-                                  {/* Placeholder if no other participants */}
-                                  {connectedUsers.length === 0 && (
-                                    <div className="relative">
-                                      <div className="w-full h-48 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
-                                        <div className="text-center">
-                                          <Users className="h-8 w-8 mx-auto mb-2" />
-                                          <p className="text-sm">Waiting for participants...</p>
-                                          <p className="text-xs mt-1">Share the meeting link to invite others</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Meeting Controls */}
-                                <div className="flex items-center justify-center space-x-4 mt-4">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
-                                  >
-                                    <Mic className="h-4 w-4 text-gray-700" />
-                                    <span>Mute</span>
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="flex items-center space-x-2 bg-white border-gray-300 text-gray-900 hover:bg-gray-50 font-medium shadow-sm"
-                                  >
-                                    <Video className="h-4 w-4 text-gray-700" />
-                                    <span>Camera</span>
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={leaveMeeting}
-                                    className="flex items-center space-x-2 bg-red-50 border-red-300 text-red-700 hover:bg-red-100 font-medium shadow-sm"
-                                  >
-                                    <PhoneOff className="h-4 w-4 text-red-700" />
-                                    <span>Leave</span>
-                                  </Button>
-                                </div>
+                            {/* Coming Soon Video Interface */}
+                            <div className="mt-4 coming-soon">
+                              <div className="coming-soon-icon">
+                                <Video className="h-6 w-6" />
                               </div>
-                            )}
+                              <h4 className="text-heading-3 mb-2">🚀 Video Calling Coming Soon!</h4>
+                              <p className="text-body text-[var(--color-text-secondary)]">
+                                We're building an amazing video experience with HD quality, screen sharing, 
+                                and real-time collaboration features.
+                              </p>
+                              <div className="flex items-center justify-center space-x-4 mt-4 text-caption text-[var(--color-text-tertiary)]">
+                                <span>📹 HD Video</span>
+                                <span>🖥️ Screen Share</span>
+                                <span>🎙️ Crystal Audio</span>
+                                <span>💬 Live Chat</span>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>
