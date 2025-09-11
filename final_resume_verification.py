@@ -4,7 +4,7 @@ import os
 
 def final_verification_test():
     """Final verification of the critical requirements"""
-    base_url = "https://translate-hub-22.preview.emergentagent.com/api"
+    base_url = "https://comprende-comms.preview.emergentagent.com/api"
     
     print("🎯 FINAL VERIFICATION: Vladislav Resume Translation Test")
     print("=" * 70)

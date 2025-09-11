@@ -3,7 +3,7 @@ import json
 
 def test_language_detection():
     """Debug language detection issues"""
-    base_url = "https://translate-hub-22.preview.emergentagent.com/api"
+    base_url = "https://comprende-comms.preview.emergentagent.com/api"
     
     # Test cases with different English texts
     test_cases = [

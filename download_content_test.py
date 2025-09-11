@@ -26,7 +26,7 @@ def test_download_actual_content():
         }
     ]
     
-    url = "https://translate-hub-22.preview.emergentagent.com/api/documents/download"
+    url = "https://comprende-comms.preview.emergentagent.com/api/documents/download"
     all_passed = True
     
     for i, test_case in enumerate(test_cases, 1):
@@ -77,7 +77,7 @@ def test_download_with_translation_result():
     print("=" * 60)
     
     # First, get a translation
-    translate_url = "https://translate-hub-22.preview.emergentagent.com/api/translate"
+    translate_url = "https://comprende-comms.preview.emergentagent.com/api/translate"
     german_text = "Der gemächliche Rhythmus der Hufe auf dem frisch gefallenen Schnee und das Schellen der Glöckchen am Zaumzeug der Haflinger-Pferde klingen wie süße Musik in der klaren Bergluft."
     
     translate_data = {
@@ -101,7 +101,7 @@ def test_download_with_translation_result():
             
             # Now test downloading the translation
             print("\nStep 2: Testing download of translation...")
-            download_url = "https://translate-hub-22.preview.emergentagent.com/api/documents/download"
+            download_url = "https://comprende-comms.preview.emergentagent.com/api/documents/download"
             
             download_data = {
                 "content": translated_text,
