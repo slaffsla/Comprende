@@ -1580,7 +1580,11 @@ function App() {
   */
 
   const joinMeeting = (meetingId) => {
-    initializeWebRTC(meetingId);
+    // Show "Coming soon" message instead of WebRTC implementation
+    toast.info("🚀 Video calling coming soon! We're working on an amazing video experience for you.", {
+      duration: 4000,
+      icon: "🎥"
+    });
   };
 
   const leaveMeeting = () => {
