@@ -1193,9 +1193,27 @@ function App() {
       });
       if (response.data) {
         setTeams(response.data);
+        // If we have teams but no current team selected, select the first one
+        if (response.data.length > 0 && !currentTeam) {
+          setCurrentTeam(response.data[0]);
+        }
       }
     } catch (error) {
       console.error('Failed to load teams:', error);
+    }
+  };
+
+  // Load team details including members
+  const loadTeamDetails = async (teamId) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/teams/${teamId}`, {
+        params: { user_id: currentUser?.id || "demo-user" }
+      });
+      if (response.data) {
+        setCurrentTeam(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load team details:', error);
     }
   };
 
