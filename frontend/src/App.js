@@ -1377,14 +1377,16 @@ function App() {
       {/* Login Dialog */}
       {showLogin && (
         <Dialog open={showLogin} onOpenChange={() => {}}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="card-elevated sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <Globe className="h-6 w-6 text-blue-600" />
-                <span>Welcome to Comprende</span>
+              <div className="w-16 h-16 bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Globe className="h-8 w-8 text-white" />
+              </div>
+              <DialogTitle className="text-display mb-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] bg-clip-text text-transparent text-center">
+                Welcome to Comprende
               </DialogTitle>
-              <p className="text-sm text-gray-600">
-                Enter your details to start translating and collaborating
+              <p className="text-body-large text-center">
+                AI-powered collaboration platform for seamless team communication
               </p>
             </DialogHeader>
             <form 
@@ -1403,15 +1405,15 @@ function App() {
               className="space-y-4"
             >
               <div>
-                <label className="text-sm font-medium">Name</label>
-                <Input name="name" type="text" placeholder="Your name" required />
+                <label className="text-body-small font-medium block mb-2">Full Name</label>
+                <Input name="name" type="text" placeholder="Enter your full name" required className="focus-ring" />
               </div>
               <div>
-                <label className="text-sm font-medium">Email</label>
-                <Input name="email" type="email" placeholder="your@email.com" required />
+                <label className="text-body-small font-medium block mb-2">Email Address</label>
+                <Input name="email" type="email" placeholder="Enter your email" required className="focus-ring" />
               </div>
               <div>
-                <label className="text-sm font-medium">Avatar</label>
+                <label className="text-body-small font-medium block mb-2">Avatar</label>
                 <div className="space-y-2">
                   <Input 
                     type="file" 
@@ -1440,22 +1442,23 @@ function App() {
                         reader.readAsDataURL(file);
                       }
                     }}
-                    className="mb-2"
+                    className="mb-2 focus-ring"
                   />
                   <input type="hidden" name="avatar" id="avatar-data" />
                   <img 
                     id="avatar-preview" 
                     style={{display: 'none'}} 
-                    className="w-10 h-10 rounded-full object-cover border" 
+                    className="w-10 h-10 rounded-full object-cover border border-[var(--color-border)]" 
                     alt="Avatar preview"
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-caption">
                     Upload an image (max 1MB) or we'll use your Gravatar
                   </p>
                 </div>
               </div>
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-                Start Using Comprende
+              <Button type="submit" className="w-full btn-primary">
+                <Zap className="h-4 w-4 mr-2" />
+                Get Started
               </Button>
             </form>
           </DialogContent>
