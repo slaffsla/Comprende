@@ -2766,7 +2766,7 @@ function App() {
                                '?'}
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium">{member.name || member.email}</p>
+                              <p className="font-medium">{member.name || member.email || 'Unknown Member'}</p>
                               <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
                                 <span className="text-xs text-gray-500">Member</span>
