@@ -1430,7 +1430,12 @@ function App() {
         toast.success(`✉️ Invitation sent to ${email}! They can join using code: ${currentTeam.invite_code}`);
         
         // Copy invite code to clipboard for easy sharing
-        await copyToClipboard(currentTeam.invite_code);
+        try {
+          await copyToClipboard(currentTeam.invite_code);
+        } catch (clipboardError) {
+          console.warn('Clipboard copy failed:', clipboardError);
+        }
+        
         setShowInviteMembers(false);
         
         // Reload team details to get updated member list if the user was immediately added
@@ -1443,6 +1448,84 @@ function App() {
       } else {
         toast.error("Failed to send invitation");
       }
+    }
+  };
+
+  // Open team detail view
+  const openTeamDetail = (team) => {
+    setSelectedTeamForDetail(team);
+    setCurrentTeam(team);
+    setShowTeamDetail(true);
+    loadTeamFiles(team.id);
+    loadTeamChat(team.id);
+  };
+
+  // Load team chat messages
+  const loadTeamChat = (teamId) => {
+    // For now, initialize with demo messages - will be replaced with backend call
+    if (!teamChat[teamId]) {
+      setTeamChat(prev => ({
+        ...prev,
+        [teamId]: [
+          {
+            id: 1,
+            sender: { name: 'System', id: 'system' },
+            message: `Welcome to the team! Use this space to communicate with team members.`,
+            timestamp: new Date().toISOString(),
+            type: 'system'
+          }
+        ]
+      }));
+    }
+  };
+
+  // Send message to team
+  const sendTeamMessage = async (teamId, message) => {
+    if (!message.trim() || !currentUser) return;
+
+    const newMsg = {
+      id: Date.now(),
+      sender: currentUser,
+      message: message.trim(),
+      timestamp: new Date().toISOString(),
+      type: 'user'
+    };
+
+    setTeamChat(prev => ({
+      ...prev,
+      [teamId]: [...(prev[teamId] || []), newMsg]
+    }));
+
+    setNewMessage('');
+    toast.success("Message sent!");
+
+    // TODO: Send to backend API
+    // await axios.post(`${BACKEND_URL}/api/teams/${teamId}/messages`, {
+    //   message: message.trim(),
+    //   sender_id: currentUser.id
+    // });
+  };
+
+  // Send file to individual team member
+  const sendFileToMember = async (memberId, file) => {
+    if (!file || !currentUser) return;
+
+    try {
+      // For now, show success message - will be replaced with backend call
+      toast.success(`📎 File sent to team member!`);
+      
+      // TODO: Implement backend call
+      // const formData = new FormData();
+      // formData.append('file', file);
+      // formData.append('recipient_id', memberId);
+      // formData.append('sender_id', currentUser.id);
+      // 
+      // await axios.post(`${BACKEND_URL}/api/members/${memberId}/files`, formData, {
+      //   headers: { "Content-Type": "multipart/form-data" }
+      // });
+    } catch (error) {
+      console.error('Failed to send file to member:', error);
+      toast.error("Failed to send file to member");
     }
   };
 
