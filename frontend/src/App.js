@@ -1562,8 +1562,8 @@ function App() {
                     )}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="card-modern">
-                  <DialogHeader>
+                <DialogContent className="notifications-dialog">
+                  <DialogHeader className="mb-4">
                     <DialogTitle className="text-heading-3">Notifications</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3">
@@ -1579,7 +1579,7 @@ function App() {
                           variant="outline" 
                           size="sm" 
                           onClick={() => setNotifications([])}
-                          className="w-full btn-secondary"
+                          className="w-full dialog-button-secondary"
                         >
                           Clear All
                         </Button>
