@@ -6,7 +6,7 @@ import {
   Mic, MicOff, Volume2, Copy, Download, Upload, Camera, 
   Settings, Bell, User, Search, Plus, Send, Pause, 
   Video, PhoneOff, Share, UserPlus, FolderOpen, RefreshCw, Trash2,
-  AlertCircle
+  AlertCircle, MessageCircle
 } from 'lucide-react';
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
