@@ -1158,6 +1158,7 @@ function App() {
 
   const createTeam = async (teamName, teamDescription = "") => {
     try {
+      console.log('Creating team:', teamName, 'Backend URL:', BACKEND_URL);
       const response = await axios.post(`${BACKEND_URL}/api/teams`, {
         name: teamName,
         description: teamDescription
@@ -1169,15 +1170,31 @@ function App() {
         toast.success(`🏢 Team "${teamName}" created! Invite code: ${response.data.invite_code}`);
         
         // Copy invite code to clipboard
-        await copyToClipboard(response.data.invite_code);
+        try {
+          await copyToClipboard(response.data.invite_code);
+        } catch (clipboardError) {
+          console.warn('Clipboard copy failed:', clipboardError);
+        }
+        
         setShowTeamCreator(false);
         
         // Load full team details including members
-        await loadTeamDetails(response.data.id);
+        try {
+          await loadTeamDetails(response.data.id);
+        } catch (detailsError) {
+          console.warn('Failed to load team details:', detailsError);
+          // Don't let this error prevent team creation success
+        }
       }
     } catch (error) {
-      console.error('Failed to create team:', error);
-      toast.error("Failed to create team");
+      console.error('Failed to create team:', error.response?.data || error.message || error);
+      if (error.response?.status === 404) {
+        toast.error("Backend service not available. Team creation disabled.");
+      } else if (error.response?.status >= 500) {
+        toast.error("Server error. Please try again.");
+      } else {
+        toast.error("Failed to create team. Please check your connection.");
+      }
     }
   };
 
