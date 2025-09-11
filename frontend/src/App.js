@@ -1369,6 +1369,36 @@ function App() {
     }
   };
 
+  // Invite member to team
+  const inviteMemberToTeam = async (email) => {
+    if (!currentTeam) {
+      toast.error("No team selected");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/teams/${currentTeam.id}/invite`, {
+        email: email,
+        inviter_id: currentUser?.id || "demo-user"
+      });
+      
+      if (response.data) {
+        toast.success(`✉️ Invitation sent to ${email}! They can join using code: ${currentTeam.invite_code}`);
+        
+        // Copy invite code to clipboard for easy sharing
+        await copyToClipboard(currentTeam.invite_code);
+        setShowInviteMembers(false);
+      }
+    } catch (error) {
+      console.error('Failed to invite member:', error);
+      if (error.response?.status === 409) {
+        toast.error("This user is already a member of the team");
+      } else {
+        toast.error("Failed to send invitation");
+      }
+    }
+  };
+
   // Simplified video meeting functionality - WebRTC moved to future development
   const joinMeeting = (meetingId) => {
     // Show "Coming soon" message instead of WebRTC implementation
