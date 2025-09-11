@@ -1383,6 +1383,9 @@ function App() {
         });
         setCurrentTeam(response.data);
         toast.success(`🎉 Joined team: ${response.data.name}`);
+        
+        // Load full team details including members
+        await loadTeamDetails(response.data.id);
       }
     } catch (error) {
       console.error('Failed to join team:', error);
