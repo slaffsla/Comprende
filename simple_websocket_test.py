@@ -5,7 +5,7 @@ import sys
 
 async def test_basic_websocket():
     """Test basic WebSocket connection"""
-    base_url = "https://comprende-comms.preview.emergentagent.com"
+    base_url = "https://comprende-app.preview.emergentagent.com"
     ws_url = base_url.replace("https://", "wss://")
     user_id = "test_user_simple"
     ws_endpoint = f"{ws_url}/ws/{user_id}"

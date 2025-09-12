@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 
 class PDFProcessingFinalTester:
-    def __init__(self, base_url="https://comprende-comms.preview.emergentagent.com"):
+    def __init__(self, base_url="https://comprende-app.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0

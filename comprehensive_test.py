@@ -9,7 +9,7 @@ import os
 
 def test_translation_api_auto_detection():
     """Test translation API with auto-detection for the exact scenarios"""
-    base_url = "https://comprende-comms.preview.emergentagent.com/api"
+    base_url = "https://comprende-app.preview.emergentagent.com/api"
     
     print("🔍 TRANSLATION API AUTO-DETECTION TESTS")
     print("=" * 60)
@@ -85,7 +85,7 @@ def test_translation_api_auto_detection():
 
 def test_document_processing():
     """Test document processing with Hebrew and Arabic"""
-    base_url = "https://comprende-comms.preview.emergentagent.com/api"
+    base_url = "https://comprende-app.preview.emergentagent.com/api"
     
     print("\n\n📄 DOCUMENT PROCESSING TESTS")
     print("=" * 60)
@@ -163,7 +163,7 @@ def test_document_processing():
 
 def test_file_download():
     """Test file download endpoint"""
-    base_url = "https://comprende-comms.preview.emergentagent.com/api"
+    base_url = "https://comprende-app.preview.emergentagent.com/api"
     
     print("\n\n📥 FILE DOWNLOAD TEST")
     print("=" * 60)
@@ -198,7 +198,7 @@ def test_file_download():
 
 def test_system_health():
     """Test system health endpoint"""
-    base_url = "https://comprende-comms.preview.emergentagent.com/api"
+    base_url = "https://comprende-app.preview.emergentagent.com/api"
     
     print("\n\n🏥 SYSTEM HEALTH TEST")
     print("=" * 60)
